@@ -1,0 +1,168 @@
+import { useEffect, useMemo, useState } from 'react';
+import AppLayout from '../components/layout/AppLayout.jsx';
+import PipelineToolbar from '../components/pipeline/PipelineToolbar.jsx';
+import KanbanBoard from '../components/pipeline/KanbanBoard.jsx';
+import ListView from '../components/pipeline/ListView.jsx';
+import CompactView from '../components/pipeline/CompactView.jsx';
+import InquiryDrawer from '../components/pipeline/InquiryDrawer.jsx';
+import LostReasonDialog from '../components/pipeline/LostReasonDialog.jsx';
+import { useAuth } from '../hooks/useAuth.js';
+import { useBoard, useMoveStage, useUpdateInquiry } from '../hooks/useInquiries.js';
+import { useTeam } from '../hooks/useTeam.js';
+import { usePipeline } from '../hooks/usePipeline.js';
+import { useToast } from '../context/ToastContext.jsx';
+
+const VIEW_STORAGE_KEY = 'yesen-pipeline-view';
+
+function loadView() {
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (v === 'board' || v === 'list' || v === 'compact') return v;
+  } catch {
+    /* ignore */
+  }
+  return 'board';
+}
+
+export default function PipelinePage() {
+  const { user } = useAuth();
+  const toast = useToast();
+  const { data: team = [] } = useTeam();
+  const { data: pipeline } = usePipeline();
+
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [source, setSource] = useState('');
+  const [assigneeFilter, setAssigneeFilter] = useState('');
+  const [view, setView] = useState(loadView);
+  const [selectedInquiryId, setSelectedInquiryId] = useState(null);
+  const [pendingLost, setPendingLost] = useState(null);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, view);
+    } catch {
+      /* ignore */
+    }
+  }, [view]);
+
+  const filters = useMemo(
+    () => ({
+      q: debouncedSearch || undefined,
+      source: source || undefined,
+      assignedTo: assigneeFilter || undefined,
+    }),
+    [debouncedSearch, source, assigneeFilter]
+  );
+
+  const { data: columns, isLoading, error } = useBoard(filters);
+  const moveStage = useMoveStage();
+  const updateInquiry = useUpdateInquiry();
+
+  const totalCount = columns?.reduce((sum, col) => sum + col.cards.length, 0) ?? 0;
+
+  function requestMove(inquiryId, stage) {
+    if (stage === 'Lost') {
+      setPendingLost({ inquiryId, stage });
+      return;
+    }
+    moveStage.mutate(
+      { id: inquiryId, stage },
+      { onError: (err) => toast.error(err.message || 'Could not move card') }
+    );
+  }
+
+  function confirmLost(lostReason) {
+    if (!pendingLost) return;
+    moveStage.mutate(
+      { id: pendingLost.inquiryId, stage: 'Lost', lostReason },
+      {
+        onError: (err) => toast.error(err.message || 'Could not move card'),
+        onSettled: () => setPendingLost(null),
+      }
+    );
+  }
+
+  function handleAssign(inquiryId, assignedTo) {
+    updateInquiry.mutate(
+      { id: inquiryId, updates: { assignedTo } },
+      {
+        onSuccess: () => toast.success(assignedTo ? 'Owner updated' : 'Marked unassigned'),
+        onError: (err) => toast.error(err.message || 'Could not update owner'),
+      }
+    );
+  }
+
+  return (
+    <AppLayout
+      title="Inquiry Pipeline"
+      subtitle={`${totalCount} ${totalCount === 1 ? 'inquiry' : 'inquiries'}`}
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        <PipelineToolbar
+          search={search}
+          onSearchChange={setSearch}
+          source={source}
+          onSourceChange={setSource}
+          assigneeFilter={assigneeFilter}
+          onAssigneeChange={setAssigneeFilter}
+          team={team}
+          currentUserId={user?._id || user?.id}
+          view={view}
+          onViewChange={setView}
+        />
+
+        <div className="min-h-0 flex-1">
+          {view === 'board' && (
+            <KanbanBoard
+              columns={columns || []}
+              isLoading={isLoading}
+              error={error}
+              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+              onDropCard={requestMove}
+            />
+          )}
+          {view === 'list' && (
+            <ListView
+              columns={columns || []}
+              isLoading={isLoading}
+              error={error}
+              stages={pipeline?.stages || []}
+              team={team}
+              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+              onStageChange={requestMove}
+              onAssign={handleAssign}
+            />
+          )}
+          {view === 'compact' && (
+            <CompactView
+              columns={columns || []}
+              isLoading={isLoading}
+              error={error}
+              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+            />
+          )}
+        </div>
+      </div>
+
+      <InquiryDrawer
+        inquiryId={selectedInquiryId}
+        onClose={() => setSelectedInquiryId(null)}
+        onRequestStageMove={requestMove}
+        team={team}
+      />
+
+      <LostReasonDialog
+        open={Boolean(pendingLost)}
+        loading={moveStage.isPending}
+        onConfirm={confirmLost}
+        onCancel={() => setPendingLost(null)}
+      />
+    </AppLayout>
+  );
+}
