@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import Input from '../common/Input.jsx';
-import Select from '../common/Select.jsx';
 import Button from '../common/Button.jsx';
+import PermissionPicker from './PermissionPicker.jsx';
+import ActiveToggle from './ActiveToggle.jsx';
 import { useCreateUser } from '../../hooks/useUsers.js';
+import { isAdminRole } from '../../utils/permissions.js';
 
-const initialForm = { name: '', username: '', password: '', role: 'staff' };
+const initialForm = {
+  name: '',
+  username: '',
+  password: '',
+  role: 'staff',
+  active: true,
+  permissions: [],
+};
 
 export default function UserForm() {
   const [form, setForm] = useState(initialForm);
@@ -25,6 +34,13 @@ export default function UserForm() {
       next.username = 'Username must be 3-30 letters/numbers, no spaces';
     }
     if (form.password.length < 8) next.password = 'Minimum 8 characters';
+
+    // const role = form.role.trim().toLowerCase();
+    // if (!role) next.role = 'Role is required';
+    // else if (!['admin', 'staff'].includes(role)) {
+    //   next.role = 'Use "admin" or "staff"';
+    // }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -33,7 +49,17 @@ export default function UserForm() {
     e.preventDefault();
     if (!validate()) return;
 
-    createUser.mutate(form, {
+    const role = form.role.trim().toLowerCase();
+    const payload = {
+      name: form.name.trim(),
+      username: form.username.trim(),
+      password: form.password,
+      role,
+      active: form.active,
+      permissions: isAdminRole(role) ? [] : form.permissions,
+    };
+
+    createUser.mutate(payload, {
       onSuccess: () => {
         setForm(initialForm);
         setErrors({});
@@ -53,12 +79,8 @@ export default function UserForm() {
           <UserPlus size={18} />
         </div>
         <div>
-          <h2 className="font-display text-lg font-bold tracking-tight text-brand-900">
-            Add a person
-          </h2>
-          <p className="text-sm text-slate-500">
-            Create a login for a teammate.
-          </p>
+          <h2 className="font-display text-lg font-bold tracking-tight text-brand-900">Add a person</h2>
+          <p className="text-sm text-slate-500">Create a login for a teammate.</p>
         </div>
       </div>
 
@@ -90,17 +112,30 @@ export default function UserForm() {
           placeholder="Minimum 8 characters"
           autoComplete="new-password"
         />
-
-        <Select
+        <Input
           label="Role"
-          id="role"
           name="role"
           value={form.role}
           onChange={(e) => update('role', e.target.value)}
-        >
-          <option value="staff">Team member</option>
-          <option value="admin">Administrator</option>
-        </Select>
+          error={errors.role}
+          placeholder="e.g. staff or admin"
+          autoComplete="off"
+        />
+
+        <ActiveToggle
+          id="create-active"
+          active={form.active}
+          onChange={(active) => update('active', active)}
+        />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+        <PermissionPicker
+          idPrefix="create"
+          role={form.role}
+          value={form.permissions}
+          onChange={(permissions) => update('permissions', permissions)}
+        />
       </div>
 
       {errors.form && (

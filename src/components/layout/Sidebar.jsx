@@ -1,13 +1,20 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
+import { PERMISSIONS, hasPermission } from '../../utils/permissions.js';
 import Avatar from '../common/Avatar.jsx';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Pipeline', icon: LayoutDashboard, end: true },
-  { to: '/users', label: 'Users', icon: Users, adminOnly: true },
+  { to: '/users', label: 'Users', icon: Users, permission: PERMISSIONS.USERS_READ },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
+
+function canViewNavItem(user, item) {
+  if (item.permission) return hasPermission(user, item.permission);
+  if (item.adminOnly) return user?.role === 'admin';
+  return true;
+}
 
 export default function Sidebar({ collapsed, onNavigate }) {
   const { user, logout } = useAuth();
@@ -36,7 +43,7 @@ export default function Sidebar({ collapsed, onNavigate }) {
           Workspace
         </p>
         <ul className="space-y-1">
-          {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'admin').map((item) => (
+          {NAV_ITEMS.filter((item) => canViewNavItem(user, item)).map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}

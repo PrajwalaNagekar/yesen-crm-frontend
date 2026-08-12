@@ -4,6 +4,7 @@ import PipelinePage from './pages/PipelinePage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import { PERMISSIONS } from './utils/permissions.js';
 
 export default function App() {
   return (
@@ -21,7 +22,7 @@ export default function App() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute adminOnly>
+          <ProtectedRoute permission={PERMISSIONS.USERS_READ}>
             <UsersPage />
           </ProtectedRoute>
         }

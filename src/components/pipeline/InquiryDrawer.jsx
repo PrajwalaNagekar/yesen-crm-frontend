@@ -80,6 +80,16 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
   const [docType, setDocType] = useState('quotation');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Vessel detail local states (committed on blur/change)
+  const [vesselLength, setVesselLength] = useState(inquiry.vesselLength ?? '');
+  const [operatingArea, setOperatingArea] = useState(inquiry.operatingArea ?? '');
+  const [dailyOperatingHours, setDailyOperatingHours] = useState(inquiry.dailyOperatingHours ?? '');
+  const [timeLine, setTimeLine] = useState(inquiry.timeLine ?? '');
+
+  function patchInquiry(updates) {
+    updateInquiry.mutate({ id: inquiry._id, updates }, mutateOpts(toast));
+  }
+
   const assigneeId =
     typeof inquiry.assignedTo === 'object' && inquiry.assignedTo
       ? inquiry.assignedTo._id
@@ -315,6 +325,105 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
 
         <Divider />
 
+        {/* Vessel Details */}
+        <Section title="Vessel Details">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Vessel Type */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Vessel Type</label>
+              <Select
+                value={inquiry.vesselType ?? ''}
+                onChange={(e) => patchInquiry({ vesselType: e.target.value || null })}
+              >
+                <option value="">— Select —</option>
+                {['Ferry', 'Tour boat', 'House boat', 'Trawler', 'Yatch', 'Workboat', 'Patrol boat', 'other'].map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Retrofit Status */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Retrofit Status</label>
+              <Select
+                value={inquiry.retrofitStatus ?? ''}
+                onChange={(e) => patchInquiry({ retrofitStatus: e.target.value || null })}
+              >
+                <option value="">— Select —</option>
+                {['retrofit existing', 'new build', 'not decided yet'].map((v) => (
+                  <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Vessel Length */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Vessel Length</label>
+              <input
+                type="text"
+                placeholder="e.g. 30m"
+                value={vesselLength}
+                onChange={(e) => setVesselLength(e.target.value)}
+                onBlur={() => {
+                  if (vesselLength !== (inquiry.vesselLength ?? ''))
+                    patchInquiry({ vesselLength: vesselLength || null });
+                }}
+                className="field-control"
+              />
+            </div>
+
+            {/* Operating Area */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Operating Area</label>
+              <input
+                type="text"
+                placeholder="e.g. Gulf of Oman"
+                value={operatingArea}
+                onChange={(e) => setOperatingArea(e.target.value)}
+                onBlur={() => {
+                  if (operatingArea !== (inquiry.operatingArea ?? ''))
+                    patchInquiry({ operatingArea: operatingArea || null });
+                }}
+                className="field-control"
+              />
+            </div>
+
+            {/* Daily Operating Hours */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Daily Operating Hours</label>
+              <input
+                type="text"
+                placeholder="e.g. 16 hrs"
+                value={dailyOperatingHours}
+                onChange={(e) => setDailyOperatingHours(e.target.value)}
+                onBlur={() => {
+                  if (dailyOperatingHours !== (inquiry.dailyOperatingHours ?? ''))
+                    patchInquiry({ dailyOperatingHours: dailyOperatingHours || null });
+                }}
+                className="field-control"
+              />
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">Timeline</label>
+              <input
+                type="text"
+                placeholder="e.g. Q3 2026"
+                value={timeLine}
+                onChange={(e) => setTimeLine(e.target.value)}
+                onBlur={() => {
+                  if (timeLine !== (inquiry.timeLine ?? ''))
+                    patchInquiry({ timeLine: timeLine || null });
+                }}
+                className="field-control"
+              />
+            </div>
+          </div>
+        </Section>
+
+        <Divider />
+
         {/* Tags */}
         <Section title="Tags">
           <div className="mb-3 flex flex-wrap gap-1.5">
@@ -497,17 +606,15 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                 return (
                   <li key={log._id} className="relative pb-4 last:pb-0">
                     <span
-                      className={`absolute -left-[1.3rem] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white ${
-                        isSystem ? 'bg-slate-300' : 'bg-brand-500'
-                      }`}
+                      className={`absolute -left-[1.3rem] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white ${isSystem ? 'bg-slate-300' : 'bg-brand-500'
+                        }`}
                     />
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span
-                        className={`rounded-md px-1.5 py-0.5 font-semibold capitalize ${
-                          isSystem
+                        className={`rounded-md px-1.5 py-0.5 font-semibold capitalize ${isSystem
                             ? 'bg-slate-100 text-slate-500'
                             : 'bg-brand-50 text-brand-700'
-                        }`}
+                          }`}
                       >
                         {log.type.replace('_', ' ')}
                       </span>
@@ -570,17 +677,17 @@ export default function InquiryDrawer({ inquiryId, onClose, onRequestStageMove, 
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300 ${
-          open ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
+        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300 ${open ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
-        className={`fixed left-0 top-0 z-50 flex h-screen w-full max-w-md transform flex-col bg-white shadow-2xl transition-transform duration-300 ease-out sm:border-r sm:border-slate-200 ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed right-0 top-0 z-50 flex h-screen w-full max-w-xl transform flex-col bg-white shadow-2xl transition-transform duration-300 ease-out sm:border-l sm:border-slate-200 ${open ? 'translate-x-0' : 'translate-x-full'
+          }`}
+      
+
         role="dialog"
         aria-modal="true"
         aria-label="Inquiry details"

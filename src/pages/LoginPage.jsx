@@ -25,7 +25,9 @@ export default function LoginPage() {
     setError('');
     setIsSubmitting(true);
     try {
+      console.log('username,password', username, password);
       await login(username, password);
+
       navigate(location.state?.from?.pathname || '/', { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');

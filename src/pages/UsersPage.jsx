@@ -5,9 +5,11 @@ import UserList from '../components/users/UserList.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import { useUsers } from '../hooks/useUsers.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { PERMISSIONS, hasPermission } from '../utils/permissions.js';
 
 export default function UsersPage() {
   const { user } = useAuth();
+  const canCreate = hasPermission(user, PERMISSIONS.USERS_CREATE);
   const { data: users, isLoading, isError, error, refetch } = useUsers();
 
   return (
@@ -16,12 +18,18 @@ export default function UsersPage() {
       title="User management"
       subtitle={`${users?.length ?? 0} team members · signed in as ${user?.name || user?.username}`}
     >
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-2 lg:p-8">
-        <div className="animate-fade-in-up">
-          <UserForm />
-        </div>
+      <div
+        className={`mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 p-4 sm:p-6 lg:p-8 ${
+          canCreate ? 'lg:grid-cols-2' : 'max-w-3xl'
+        }`}
+      >
+        {canCreate ? (
+          <div className="animate-fade-in-up">
+            <UserForm />
+          </div>
+        ) : null}
 
-        <div className="min-w-0 animate-fade-in-up stagger-2">
+        <div className={`min-w-0 animate-fade-in-up ${canCreate ? 'stagger-2' : ''}`}>
           {isLoading ? (
             <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-border bg-white/80">
               <Spinner size={24} />

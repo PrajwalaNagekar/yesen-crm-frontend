@@ -11,3 +11,7 @@ export function createUser(payload) {
 export function updateUser(id, updates) {
   return apiRequest(`/users/${id}`, { method: 'PATCH', body: updates });
 }
+
+export function deleteUser(id) {
+  return apiRequest(`/users/${id}`, { method: 'DELETE' });
+}
