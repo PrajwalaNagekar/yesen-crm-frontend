@@ -1,9 +1,9 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { hasPermission } from '../utils/permissions.js';
+import { getDefaultRoute, hasModuleAccess, hasPermission } from '../utils/permissions.js';
 import Spinner from '../components/common/Spinner.jsx';
 
-export default function ProtectedRoute({ children, adminOnly = false, permission = null }) {
+export default function ProtectedRoute({ children, adminOnly = false, permission = null, module = null }) {
   const { user, status } = useAuth();
   const location = useLocation();
 
@@ -21,11 +21,15 @@ export default function ProtectedRoute({ children, adminOnly = false, permission
   }
 
   if (adminOnly && user?.role !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to={getDefaultRoute(user)} replace />;
   }
 
   if (permission && !hasPermission(user, permission)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={getDefaultRoute(user)} replace />;
+  }
+
+  if (module && !hasModuleAccess(user, module)) {
+    return <Navigate to={getDefaultRoute(user)} replace />;
   }
 
   return children;

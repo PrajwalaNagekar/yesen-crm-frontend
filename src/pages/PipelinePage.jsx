@@ -6,11 +6,14 @@ import ListView from '../components/pipeline/ListView.jsx';
 import CompactView from '../components/pipeline/CompactView.jsx';
 import InquiryDrawer from '../components/pipeline/InquiryDrawer.jsx';
 import LostReasonDialog from '../components/pipeline/LostReasonDialog.jsx';
+import AddInquiryMenu from '../components/pipeline/AddInquiryMenu.jsx';
+import IntakeFormModal from '../components/pipeline/IntakeFormModal.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBoard, useMoveStage, useUpdateInquiry } from '../hooks/useInquiries.js';
 import { useTeam } from '../hooks/useTeam.js';
 import { usePipeline } from '../hooks/usePipeline.js';
 import { useToast } from '../context/ToastContext.jsx';
+import { canControlPipeline } from '../utils/permissions.js';
 
 const VIEW_STORAGE_KEY = 'yesen-pipeline-view';
 
@@ -26,6 +29,7 @@ function loadView() {
 
 export default function PipelinePage() {
   const { user } = useAuth();
+  const canControl = canControlPipeline(user);
   const toast = useToast();
   const { data: team = [] } = useTeam();
   const { data: pipeline } = usePipeline();
@@ -37,6 +41,7 @@ export default function PipelinePage() {
   const [view, setView] = useState(loadView);
   const [selectedInquiryId, setSelectedInquiryId] = useState(null);
   const [pendingLost, setPendingLost] = useState(null);
+  const [intakeType, setIntakeType] = useState(null);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
@@ -102,6 +107,9 @@ export default function PipelinePage() {
     <AppLayout
       title="Inquiry Pipeline"
       subtitle={`${totalCount} ${totalCount === 1 ? 'inquiry' : 'inquiries'}`}
+      actions={
+        canControl ? <AddInquiryMenu onSelect={setIntakeType} /> : null
+      }
     >
       <div className="flex h-full min-h-0 flex-col">
         <PipelineToolbar
@@ -123,6 +131,7 @@ export default function PipelinePage() {
               columns={columns || []}
               isLoading={isLoading}
               error={error}
+              canControl={canControl}
               onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
               onDropCard={requestMove}
             />
@@ -132,6 +141,7 @@ export default function PipelinePage() {
               columns={columns || []}
               isLoading={isLoading}
               error={error}
+              canControl={canControl}
               stages={pipeline?.stages || []}
               team={team}
               onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
@@ -155,6 +165,7 @@ export default function PipelinePage() {
         onClose={() => setSelectedInquiryId(null)}
         onRequestStageMove={requestMove}
         team={team}
+        readOnly={!canControl}
       />
 
       <LostReasonDialog
@@ -162,6 +173,15 @@ export default function PipelinePage() {
         loading={moveStage.isPending}
         onConfirm={confirmLost}
         onCancel={() => setPendingLost(null)}
+      />
+
+      <IntakeFormModal
+        type={intakeType}
+        open={Boolean(intakeType)}
+        onClose={() => setIntakeType(null)}
+        onSuccess={(inquiry) => {
+          if (inquiry?._id) setSelectedInquiryId(inquiry._id);
+        }}
       />
     </AppLayout>
   );

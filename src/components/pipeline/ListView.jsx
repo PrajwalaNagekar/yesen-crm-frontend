@@ -22,6 +22,7 @@ export default function ListView({
   error,
   stages = [],
   team = [],
+  canControl = true,
   onOpenInquiry,
   onStageChange,
   onAssign,
@@ -148,35 +149,49 @@ export default function ListView({
                     </div>
                   </td>
                   <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                    <select
-                      value={row.stage}
-                      onChange={(e) => onStageChange(row._id, e.target.value)}
-                      aria-label={`Stage for ${row.clientName}`}
-                      className={`w-full max-w-[10.5rem] cursor-pointer rounded-md border px-2 py-1.5 text-xs font-semibold ring-1 ${stageMeta.badge} border-transparent focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100`}
-                    >
-                      {(stages.length ? stages : Object.keys(STAGE_META)).map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                    {canControl ? (
+                      <select
+                        value={row.stage}
+                        onChange={(e) => onStageChange(row._id, e.target.value)}
+                        aria-label={`Stage for ${row.clientName}`}
+                        className={`w-full max-w-[10.5rem] cursor-pointer rounded-md border px-2 py-1.5 text-xs font-semibold ring-1 ${stageMeta.badge} border-transparent focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+                      >
+                        {(stages.length ? stages : Object.keys(STAGE_META)).map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span
+                        className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${stageMeta.badge}`}
+                      >
+                        {row.stage}
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                    <select
-                      value={assigneeId || ''}
-                      onChange={(e) =>
-                        onAssign(row._id, e.target.value === '' ? null : e.target.value)
-                      }
-                      aria-label={`Owner for ${row.clientName}`}
-                      className="w-full max-w-[9.5rem] cursor-pointer rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
-                    >
-                      <option value="">Unassigned</option>
-                      {team.map((u) => (
-                        <option key={u._id} value={u._id}>
-                          {u.name || u.username}
-                        </option>
-                      ))}
-                    </select>
+                    {canControl ? (
+                      <select
+                        value={assigneeId || ''}
+                        onChange={(e) =>
+                          onAssign(row._id, e.target.value === '' ? null : e.target.value)
+                        }
+                        aria-label={`Owner for ${row.clientName}`}
+                        className="w-full max-w-[9.5rem] cursor-pointer rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                      >
+                        <option value="">Unassigned</option>
+                        {team.map((u) => (
+                          <option key={u._id} value={u._id}>
+                            {u.name || u.username}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-slate-600">
+                        {getAssigneeName(row.assignedTo) || 'Unassigned'}
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-3 text-slate-600">
                     {SOURCE_LABELS[row.source] || row.source}

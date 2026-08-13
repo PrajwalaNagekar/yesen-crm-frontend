@@ -34,7 +34,7 @@ import {
   useDeleteInquiry,
 } from '../../hooks/useInquiries.js';
 import { downloadDocument } from '../../api/inquiries.js';
-import { formatCurrency, formatRelativeTime, SOURCE_LABELS, STAGE_META } from '../../utils/format.js';
+import { formatCurrency, formatRelativeTime, SOURCE_LABELS, STAGE_META, getAssigneeName } from '../../utils/format.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 function Section({ title, action, children }) {
@@ -60,7 +60,15 @@ function mutateOpts(toast, extras = {}) {
   };
 }
 
-function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStageMove, team = [] }) {
+function InquiryDrawerContent({
+  inquiry,
+  documents,
+  logs,
+  onClose,
+  onRequestStageMove,
+  team = [],
+  readOnly = false,
+}) {
   const toast = useToast();
   const { data: pipeline } = usePipeline();
 
@@ -97,6 +105,7 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
 
   const stageMeta = STAGE_META[inquiry.stage] || STAGE_META.Inquired;
   const dealDisplay = formatCurrency(inquiry.value);
+  const ownerName = getAssigneeName(inquiry.assignedTo);
 
   function handleValueBlur() {
     const trimmed = valueInput.trim();
@@ -201,44 +210,58 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               <label className="mb-1.5 block text-sm font-medium text-slate-600" htmlFor="stage-select">
                 Stage
               </label>
-              <Select
-                id="stage-select"
-                value={inquiry.stage}
-                onChange={(e) => onRequestStageMove(inquiry._id, e.target.value)}
-                aria-label="Pipeline stage"
-              >
-                {(pipeline?.stages || []).map((stage) => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </Select>
+              {readOnly ? (
+                <p
+                  className={`inline-flex rounded-lg px-3 py-2 text-sm font-semibold ring-1 ${stageMeta.badge}`}
+                >
+                  {inquiry.stage}
+                </p>
+              ) : (
+                <Select
+                  id="stage-select"
+                  value={inquiry.stage}
+                  onChange={(e) => onRequestStageMove(inquiry._id, e.target.value)}
+                  aria-label="Pipeline stage"
+                >
+                  {(pipeline?.stages || []).map((stage) => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-600" htmlFor="owner-select">
                 Owner
               </label>
-              <Select
-                id="owner-select"
-                value={assigneeId || ''}
-                onChange={(e) => {
-                  const next = e.target.value === '' ? null : e.target.value;
-                  updateInquiry.mutate(
-                    { id: inquiry._id, updates: { assignedTo: next } },
-                    mutateOpts(toast, {
-                      onSuccess: () => toast.success(next ? 'Owner updated' : 'Unassigned'),
-                    })
-                  );
-                }}
-                aria-label="Assigned owner"
-              >
-                <option value="">Unassigned</option>
-                {team.map((member) => (
-                  <option key={member._id} value={member._id}>
-                    {member.name || member.username}
-                  </option>
-                ))}
-              </Select>
+              {readOnly ? (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  {ownerName || 'Unassigned'}
+                </p>
+              ) : (
+                <Select
+                  id="owner-select"
+                  value={assigneeId || ''}
+                  onChange={(e) => {
+                    const next = e.target.value === '' ? null : e.target.value;
+                    updateInquiry.mutate(
+                      { id: inquiry._id, updates: { assignedTo: next } },
+                      mutateOpts(toast, {
+                        onSuccess: () => toast.success(next ? 'Owner updated' : 'Unassigned'),
+                      })
+                    );
+                  }}
+                  aria-label="Assigned owner"
+                >
+                  <option value="">Unassigned</option>
+                  {team.map((member) => (
+                    <option key={member._id} value={member._id}>
+                      {member.name || member.username}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
           </div>
           {inquiry.stage === 'Lost' && inquiry.lost?.reason ? (
@@ -318,7 +341,9 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               value={valueInput}
               onChange={(e) => setValueInput(e.target.value)}
               onBlur={handleValueBlur}
-              className="field-control"
+              readOnly={readOnly}
+              disabled={readOnly}
+              className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
             />
           </div>
         </Section>
@@ -334,6 +359,7 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               <Select
                 value={inquiry.vesselType ?? ''}
                 onChange={(e) => patchInquiry({ vesselType: e.target.value || null })}
+                disabled={readOnly}
               >
                 <option value="">— Select —</option>
                 {['Ferry', 'Tour boat', 'House boat', 'Trawler', 'Yatch', 'Workboat', 'Patrol boat', 'other'].map((v) => (
@@ -348,6 +374,7 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               <Select
                 value={inquiry.retrofitStatus ?? ''}
                 onChange={(e) => patchInquiry({ retrofitStatus: e.target.value || null })}
+                disabled={readOnly}
               >
                 <option value="">— Select —</option>
                 {['retrofit existing', 'new build', 'not decided yet'].map((v) => (
@@ -365,10 +392,12 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                 value={vesselLength}
                 onChange={(e) => setVesselLength(e.target.value)}
                 onBlur={() => {
-                  if (vesselLength !== (inquiry.vesselLength ?? ''))
+                  if (!readOnly && vesselLength !== (inquiry.vesselLength ?? ''))
                     patchInquiry({ vesselLength: vesselLength || null });
                 }}
-                className="field-control"
+                readOnly={readOnly}
+                disabled={readOnly}
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
               />
             </div>
 
@@ -381,10 +410,12 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                 value={operatingArea}
                 onChange={(e) => setOperatingArea(e.target.value)}
                 onBlur={() => {
-                  if (operatingArea !== (inquiry.operatingArea ?? ''))
+                  if (!readOnly && operatingArea !== (inquiry.operatingArea ?? ''))
                     patchInquiry({ operatingArea: operatingArea || null });
                 }}
-                className="field-control"
+                readOnly={readOnly}
+                disabled={readOnly}
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
               />
             </div>
 
@@ -397,10 +428,12 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                 value={dailyOperatingHours}
                 onChange={(e) => setDailyOperatingHours(e.target.value)}
                 onBlur={() => {
-                  if (dailyOperatingHours !== (inquiry.dailyOperatingHours ?? ''))
+                  if (!readOnly && dailyOperatingHours !== (inquiry.dailyOperatingHours ?? ''))
                     patchInquiry({ dailyOperatingHours: dailyOperatingHours || null });
                 }}
-                className="field-control"
+                readOnly={readOnly}
+                disabled={readOnly}
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
               />
             </div>
 
@@ -413,10 +446,12 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                 value={timeLine}
                 onChange={(e) => setTimeLine(e.target.value)}
                 onBlur={() => {
-                  if (timeLine !== (inquiry.timeLine ?? ''))
+                  if (!readOnly && timeLine !== (inquiry.timeLine ?? ''))
                     patchInquiry({ timeLine: timeLine || null });
                 }}
-                className="field-control"
+                readOnly={readOnly}
+                disabled={readOnly}
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
               />
             </div>
           </div>
@@ -431,7 +466,11 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               inquiry.tags.map((t) => (
                 <TagBadge
                   key={t}
-                  onRemove={() => removeTag.mutate({ id: inquiry._id, tag: t }, mutateOpts(toast))}
+                  onRemove={
+                    readOnly
+                      ? undefined
+                      : () => removeTag.mutate({ id: inquiry._id, tag: t }, mutateOpts(toast))
+                  }
                 >
                   {t}
                 </TagBadge>
@@ -440,24 +479,30 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
               <p className="text-sm text-slate-400">No tags</p>
             )}
           </div>
-          <form onSubmit={handleAddTag} className="flex gap-2">
-            <input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="New tag"
-              className="field-control flex-1"
-            />
-            <Button type="submit" variant="secondary" className="shrink-0 !rounded-xl px-3" aria-label="Add tag">
-              <Plus size={16} />
-            </Button>
-          </form>
+          {!readOnly ? (
+            <form onSubmit={handleAddTag} className="flex gap-2">
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="New tag"
+                className="field-control flex-1"
+              />
+              <Button type="submit" variant="secondary" className="shrink-0 !rounded-xl px-3" aria-label="Add tag">
+                <Plus size={16} />
+              </Button>
+            </form>
+          ) : null}
         </Section>
 
         <Divider />
 
         {/* Quotation */}
         <Section title="Quotation">
-          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-brand-200 hover:bg-brand-50/30">
+          <label
+            className={`flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 ${
+              readOnly ? '' : 'cursor-pointer transition-colors hover:border-brand-200 hover:bg-brand-50/30'
+            }`}
+          >
             <div className="min-w-0">
               <p className="text-sm font-semibold text-brand-900">
                 {inquiry.quotation?.sent ? 'Marked as sent' : 'Not sent yet'}
@@ -473,13 +518,14 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
             <input
               type="checkbox"
               checked={Boolean(inquiry.quotation?.sent)}
+              disabled={readOnly}
               onChange={(e) =>
                 setQuotationStatus.mutate(
                   { id: inquiry._id, sent: e.target.checked },
                   mutateOpts(toast)
                 )
               }
-              className="h-5 w-5 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+              className="h-5 w-5 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-400 disabled:cursor-default"
             />
           </label>
         </Section>
@@ -519,19 +565,21 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
                     >
                       <Download size={15} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        deleteDocument.mutate(
-                          { docId: doc._id, inquiryId: inquiry._id },
-                          mutateOpts(toast)
-                        )
-                      }
-                      className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                      aria-label="Delete"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {!readOnly ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          deleteDocument.mutate(
+                            { docId: doc._id, inquiryId: inquiry._id },
+                            mutateOpts(toast)
+                          )
+                        }
+                        className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Delete"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    ) : null}
                   </span>
                 </li>
               ))}
@@ -540,64 +588,68 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
             <p className="mb-3 text-sm text-slate-400">No documents yet</p>
           )}
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <div className="sm:w-36">
-              <Select
-                label="Type"
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-              >
-                <option value="quotation">Quotation</option>
-                <option value="invoice">Invoice</option>
-                <option value="other">Other</option>
-              </Select>
+          {!readOnly ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div className="sm:w-36">
+                <Select
+                  label="Type"
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                >
+                  <option value="quotation">Quotation</option>
+                  <option value="invoice">Invoice</option>
+                  <option value="other">Other</option>
+                </Select>
+              </div>
+              <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50/40 hover:text-brand-700">
+                <Upload size={16} />
+                {uploadDocument.isPending ? 'Uploading…' : 'Upload file'}
+                <input type="file" onChange={handleFileChange} className="hidden" />
+              </label>
             </div>
-            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50/40 hover:text-brand-700">
-              <Upload size={16} />
-              {uploadDocument.isPending ? 'Uploading…' : 'Upload file'}
-              <input type="file" onChange={handleFileChange} className="hidden" />
-            </label>
-          </div>
+          ) : null}
         </Section>
 
         <Divider />
 
         {/* Activity */}
         <Section title="Activity">
-          <form onSubmit={handleAddLog} className="mb-4 space-y-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="sm:col-span-1">
-                <Select
-                  value={logType}
-                  onChange={(e) => setLogType(e.target.value)}
-                  aria-label="Log type"
-                >
-                  <option value="note">Note</option>
-                  <option value="call">Call</option>
-                  <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="meeting">Meeting</option>
-                </Select>
+          {!readOnly ? (
+            <form onSubmit={handleAddLog} className="mb-4 space-y-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="sm:col-span-1">
+                  <Select
+                    value={logType}
+                    onChange={(e) => setLogType(e.target.value)}
+                    aria-label="Log type"
+                  >
+                    <option value="note">Note</option>
+                    <option value="call">Call</option>
+                    <option value="email">Email</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="meeting">Meeting</option>
+                  </Select>
+                </div>
+                <div className="sm:col-span-2">
+                  <Textarea
+                    value={logMessage}
+                    onChange={(e) => setLogMessage(e.target.value)}
+                    placeholder="What happened?"
+                    rows={2}
+                  />
+                </div>
               </div>
-              <div className="sm:col-span-2">
-                <Textarea
-                  value={logMessage}
-                  onChange={(e) => setLogMessage(e.target.value)}
-                  placeholder="What happened?"
-                  rows={2}
-                />
-              </div>
-            </div>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="w-full"
-              disabled={!logMessage.trim() || addLog.isPending}
-            >
-              <Send size={14} />
-              Add entry
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full"
+                disabled={!logMessage.trim() || addLog.isPending}
+              >
+                <Send size={14} />
+                Add entry
+              </Button>
+            </form>
+          ) : null}
 
           {logs?.length ? (
             <ol className="relative space-y-0 border-l-2 border-slate-200 pl-4">
@@ -633,18 +685,19 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
           )}
         </Section>
 
-        {/* Danger zone */}
-        <div className="border-t border-slate-100 px-5 py-5 sm:px-6">
-          <Button
-            variant="danger"
-            className="w-full"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleteInquiry.isPending}
-          >
-            <Trash2 size={15} />
-            Delete inquiry
-          </Button>
-        </div>
+        {!readOnly ? (
+          <div className="border-t border-slate-100 px-5 py-5 sm:px-6">
+            <Button
+              variant="danger"
+              className="w-full"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteInquiry.isPending}
+            >
+              <Trash2 size={15} />
+              Delete inquiry
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <ConfirmDialog
@@ -660,7 +713,13 @@ function InquiryDrawerContent({ inquiry, documents, logs, onClose, onRequestStag
   );
 }
 
-export default function InquiryDrawer({ inquiryId, onClose, onRequestStageMove, team = [] }) {
+export default function InquiryDrawer({
+  inquiryId,
+  onClose,
+  onRequestStageMove,
+  team = [],
+  readOnly = false,
+}) {
   const { data, isLoading } = useInquiry(inquiryId);
   const open = Boolean(inquiryId);
   const inquiry = data?.inquiry;
@@ -710,6 +769,7 @@ export default function InquiryDrawer({ inquiryId, onClose, onRequestStageMove, 
             onClose={onClose}
             onRequestStageMove={onRequestStageMove}
             team={team}
+            readOnly={readOnly}
           />
         )}
       </div>

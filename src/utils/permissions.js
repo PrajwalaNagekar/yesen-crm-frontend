@@ -61,3 +61,50 @@ export function hasPermission(user, permission) {
 
   return false;
 }
+
+export function canControlPipeline(user) {
+  return hasPermission(user, PERMISSIONS.PIPELINE_CONTROL);
+}
+
+export function hasModuleAccess(user, module) {
+  if (!user || !module) return false;
+  if (isAdminRole(user.role)) return true;
+
+  const granted = getUserPermissions(user);
+  const prefix = `${module}.`;
+  return granted.some((p) => p.startsWith(prefix));
+}
+
+export function getUserPermissionGroups(user) {
+  if (!user) return [];
+
+  if (isAdminRole(user.role)) {
+    return PERMISSION_GROUPS.map((group) => ({
+      label: group.label,
+      module: group.module,
+      permissions: group.permissions.map((p) => p.label),
+    }));
+  }
+
+  const granted = getUserPermissions(user);
+  return PERMISSION_GROUPS.map((group) => ({
+    label: group.label,
+    module: group.module,
+    permissions: group.permissions.filter((p) => granted.includes(p.key)).map((p) => p.label),
+  })).filter((group) => group.permissions.length > 0);
+}
+
+export function getDefaultRoute(user) {
+  if (hasModuleAccess(user, 'pipeline')) return '/';
+  if (hasModuleAccess(user, 'users')) return '/users';
+  return '/settings';
+}
+
+export function resolvePostAuthPath(user, fromPath) {
+  if (fromPath && fromPath !== '/login') {
+    if (fromPath === '/' && hasModuleAccess(user, 'pipeline')) return '/';
+    if (fromPath.startsWith('/users') && hasModuleAccess(user, 'users')) return fromPath;
+    if (fromPath.startsWith('/settings')) return fromPath;
+  }
+  return getDefaultRoute(user);
+}

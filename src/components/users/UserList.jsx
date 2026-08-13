@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import Avatar from '../common/Avatar.jsx';
 import EmptyState from '../common/EmptyState.jsx';
-import Button from '../common/Button.jsx';
-import Input from '../common/Input.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
-import PermissionPicker from './PermissionPicker.jsx';
+import UserDetailModal from './UserDetailModal.jsx';
 import ActiveToggle from './ActiveToggle.jsx';
-import { Users as UsersIcon, Pencil, Trash2, X } from 'lucide-react';
+import { Users as UsersIcon, Eye, Trash2 } from 'lucide-react';
 import { useDeleteUser, useUpdateUser } from '../../hooks/useUsers.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -23,77 +21,57 @@ function permissionSummary(user) {
   return count ? `${count} permission${count === 1 ? '' : 's'}` : 'No permissions';
 }
 
-function UserEditPanel({ user, onClose }) {
-  const updateUser = useUpdateUser();
-  const [form, setForm] = useState({
-    role: user.role || 'staff',
-    active: user.active !== false,
-    permissions: normalizePermissions(user.permissions),
-  });
+function StatusCell({ user, canUpdate, updateUser }) {
+  const isAdmin = isAdminRole(user.role);
 
-  function handleSave() {
-    const role = form.role.trim().toLowerCase();
-    updateUser.mutate(
-      {
-        id: user._id,
-        updates: {
-          role,
-          active: form.active,
-          permissions: isAdminRole(role) ? [] : form.permissions,
-        },
-      },
-      { onSuccess: onClose }
+  if (canUpdate && !isAdmin) {
+    return (
+      <ActiveToggle
+        id={`list-active-${user._id}`}
+        compact
+        active={user.active !== false}
+        onChange={(active) => updateUser.mutate({ id: user._id, updates: { active } })}
+        disabled={updateUser.isPending}
+      />
     );
   }
 
   return (
-    <div className="mt-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-4">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-brand-900">Edit access</p>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        user.active !== false
+          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+          : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200'
+      }`}
+    >
+      {user.active !== false ? 'Active' : 'Inactive'}
+    </span>
+  );
+}
+
+function UserRowActions({ user, isSelf, onView, onDelete, canDelete }) {
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={onView}
+        className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"
+        aria-label={`View ${user.name}`}
+        title="View details"
+      >
+        <Eye size={16} />
+      </button>
+      {canDelete && !isSelf ? (
         <button
           type="button"
-          onClick={onClose}
-          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
-          aria-label="Close edit panel"
+          onClick={onDelete}
+          className="rounded-xl border border-transparent p-2 text-slate-400 transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-600"
+          aria-label="Delete user"
+          title="Delete user"
         >
-          <X size={16} />
+          <Trash2 size={16} />
         </button>
-      </div>
-
-      <div className="space-y-4">
-        <Input
-          label="Role"
-          name={`role-${user._id}`}
-          value={form.role}
-          onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-          placeholder="e.g. staff or admin"
-        />
-
-        <ActiveToggle
-          id={`edit-active-${user._id}`}
-          active={form.active}
-          onChange={(active) => setForm((f) => ({ ...f, active }))}
-        />
-
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5">
-          <PermissionPicker
-            idPrefix={`edit-${user._id}`}
-            role={form.role}
-            value={form.permissions}
-            onChange={(permissions) => setForm((f) => ({ ...f, permissions }))}
-          />
-        </div>
-
-        <Button
-          type="button"
-          size="sm"
-          className="w-full"
-          disabled={updateUser.isPending}
-          onClick={handleSave}
-        >
-          {updateUser.isPending ? 'Saving…' : 'Save changes'}
-        </Button>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -103,7 +81,7 @@ export default function UserList({ users }) {
   const toast = useToast();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
-  const [editingId, setEditingId] = useState(null);
+  const [viewUser, setViewUser] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const canUpdate = hasPermission(currentUser, PERMISSIONS.USERS_UPDATE);
@@ -116,7 +94,7 @@ export default function UserList({ users }) {
       {
         onSuccess: () => {
           toast.success(`${pendingDelete.name} was deleted`);
-          if (editingId === pendingDelete._id) setEditingId(null);
+          if (viewUser?._id === pendingDelete._id) setViewUser(null);
           setPendingDelete(null);
         },
         onError: (err) => {
@@ -129,106 +107,159 @@ export default function UserList({ users }) {
 
   if (!users?.length) {
     return (
-      <EmptyState
-        icon={UsersIcon}
-        title="No team members yet"
-        description="Add the first person using the form on the left."
-      />
+      <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 px-6 py-16">
+        <EmptyState
+          icon={UsersIcon}
+          title="No team members yet"
+          description="Add your first teammate using the Add user button above."
+        />
+      </div>
     );
   }
 
   return (
     <>
-      <div className="surface-card p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold tracking-tight text-brand-900">Team</h2>
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500 ring-1 ring-border">
-            {users.length} {users.length === 1 ? 'person' : 'people'}
-          </span>
-        </div>
-
-        <ul className="divide-y divide-border">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/40">
+        {/* Mobile cards */}
+        <ul className="divide-y divide-slate-100 md:hidden">
           {users.map((user, i) => {
-            const isEditing = editingId === user._id;
             const isSelf = String(currentUser?._id) === String(user._id);
+            const isAdmin = isAdminRole(user.role);
 
             return (
               <li
                 key={user._id}
-                className={`py-3.5 first:pt-0 last:pb-0 animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}
+                className={`p-4 animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar name={user.name} size={40} />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-brand-900">
-                        {user.name}
-                        {isSelf ? (
-                          <span className="ml-2 text-xs font-medium text-slate-400">(you)</span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-sm text-slate-500">
-                        @{user.username}
-                        <span className="mx-1.5 text-slate-300">·</span>
-                        <span className="capitalize">{user.role}</span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-400">{permissionSummary(user)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {canUpdate ? (
-                      <ActiveToggle
-                        id={`list-active-${user._id}`}
-                        compact
-                        active={user.active !== false}
-                        onChange={(active) => updateUser.mutate({ id: user._id, updates: { active } })}
-                        disabled={updateUser.isPending}
+                <div className="flex items-start gap-3">
+                  <Avatar name={user.name} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">
+                          {user.name}
+                          {isSelf ? (
+                            <span className="ml-1.5 text-xs font-medium text-slate-400">(you)</span>
+                          ) : null}
+                        </p>
+                        <p className="truncate text-sm text-slate-500">@{user.username}</p>
+                      </div>
+                      <UserRowActions
+                        user={user}
+                        isSelf={isSelf}
+                        canDelete={canDelete}
+                        onView={() => setViewUser(user)}
+                        onDelete={() => setPendingDelete(user)}
                       />
-                    ) : (
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          user.active
-                            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                            : 'bg-slate-100 text-slate-500 ring-1 ring-border'
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
+                          isAdmin
+                            ? 'bg-blue-50 text-[#1d4ed8] ring-blue-100'
+                            : 'bg-slate-100 text-slate-600 ring-slate-200'
                         }`}
                       >
-                        {user.active ? 'Active' : 'Inactive'}
+                        {user.role}
                       </span>
-                    )}
-
-                    {canUpdate ? (
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(isEditing ? null : user._id)}
-                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-brand-700"
-                        aria-label="Edit user access"
-                        title="Edit role and permissions"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                    ) : null}
-
-                    {canDelete && !isSelf ? (
-                      <button
-                        type="button"
-                        onClick={() => setPendingDelete(user)}
-                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        aria-label="Delete user"
-                        title="Delete user"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    ) : null}
+                      <StatusCell user={user} canUpdate={canUpdate} updateUser={updateUser} />
+                      <span className="rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500 ring-1 ring-slate-200/80">
+                        {permissionSummary(user)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {isEditing ? <UserEditPanel user={user} onClose={() => setEditingId(null)} /> : null}
               </li>
             );
           })}
         </ul>
+
+        {/* Desktop table */}
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[760px] border-collapse text-left">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/90 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <th className="px-5 py-3.5 font-semibold">Team member</th>
+                <th className="w-28 px-3 py-3.5 font-semibold">Role</th>
+                <th className="w-36 px-3 py-3.5 font-semibold">Status</th>
+                <th className="w-40 px-3 py-3.5 font-semibold">Permissions</th>
+                <th className="w-28 px-5 py-3.5 text-right font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {users.map((user, i) => {
+                const isSelf = String(currentUser?._id) === String(user._id);
+                const isAdmin = isAdminRole(user.role);
+
+                return (
+                  <tr
+                    key={user._id}
+                    className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)} transition-colors hover:bg-blue-50/25`}
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar name={user.name} size={42} />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-slate-900">
+                            {user.name}
+                            {isSelf ? (
+                              <span className="ml-2 text-xs font-medium text-slate-400">(you)</span>
+                            ) : null}
+                          </p>
+                          <p className="truncate text-sm text-slate-500">@{user.username}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 align-middle">
+                      <span
+                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
+                          isAdmin
+                            ? 'bg-blue-50 text-[#1d4ed8] ring-blue-100'
+                            : 'bg-slate-100 text-slate-600 ring-slate-200'
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-3 py-4 align-middle">
+                      <StatusCell user={user} canUpdate={canUpdate} updateUser={updateUser} />
+                    </td>
+                    <td className="px-3 py-4 align-middle">
+                      <span className="inline-flex max-w-full truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                        {permissionSummary(user)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 align-middle">
+                      <UserRowActions
+                        user={user}
+                        isSelf={isSelf}
+                        canDelete={canDelete}
+                        onView={() => setViewUser(user)}
+                        onDelete={() => setPendingDelete(user)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <UserDetailModal
+        key={viewUser?._id}
+        user={viewUser}
+        canUpdate={canUpdate}
+        onClose={() => setViewUser(null)}
+        onRequestDelete={
+          canDelete && viewUser && String(currentUser?._id) !== String(viewUser._id)
+            ? () => {
+                setPendingDelete(viewUser);
+                setViewUser(null);
+              }
+            : null
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(pendingDelete)}

@@ -30,9 +30,9 @@ export default function AppLayout({ title, subtitle, actions, children, scrollab
   }
 
   return (
-    <div className="app-canvas flex h-screen">
+    <div className="app-canvas flex h-screen overflow-hidden">
       {/* Desktop / tablet sidebar */}
-      <div className={`hidden shrink-0 md:block ${collapsed ? 'w-0' : ''}`}>
+      <div className={`hidden shrink-0 transition-[width] duration-300 ease-out md:block ${collapsed ? 'w-0' : ''}`}>
         <Sidebar collapsed={collapsed} />
       </div>
 
@@ -40,14 +40,14 @@ export default function AppLayout({ title, subtitle, actions, children, scrollab
       <div className={`fixed inset-0 z-40 md:hidden ${mobileOpen ? '' : 'pointer-events-none'}`}>
         <button
           type="button"
-          className={`absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 ${
             mobileOpen ? 'opacity-100' : 'opacity-0'
           }`}
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
         />
         <div
-          className={`absolute left-0 top-0 h-full transform shadow-elevated transition-transform duration-300 ease-out ${
+          className={`absolute left-0 top-0 h-full transform shadow-2xl shadow-slate-900/20 transition-transform duration-300 ease-out ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -56,36 +56,58 @@ export default function AppLayout({ title, subtitle, actions, children, scrollab
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b-2 border-slate-200 bg-white px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 lg:px-6">
+        <header className="relative z-10 flex h-[4.75rem] shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/80 px-3 shadow-sm shadow-slate-200/40 backdrop-blur-md sm:gap-4 sm:px-5 lg:px-6">
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#2563EB]/20 to-transparent"
+            aria-hidden
+          />
+
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={toggleNav}
-              className="shrink-0 rounded-lg border border-slate-200 p-2 text-slate-500 transition-all duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 active:scale-95"
+              className="shrink-0 rounded-xl border border-slate-200/80 bg-white p-2.5 text-slate-500 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB] hover:shadow-md hover:shadow-blue-500/10 active:scale-95"
               aria-label={mobileOpen ? 'Close sidebar' : 'Toggle sidebar'}
             >
-              {mobileOpen ? <X size={20} /> : <PanelLeft size={20} />}
+              {mobileOpen ? <X size={20} strokeWidth={2} /> : <PanelLeft size={20} strokeWidth={2} />}
             </button>
+
             <div className="min-w-0 animate-fade-in">
-              <h1 className="truncate font-display text-lg font-bold tracking-tight text-brand-900 sm:text-xl lg:text-2xl">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="mt-0.5 truncate text-xs text-slate-500 sm:text-sm">{subtitle}</p>
-              )}
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span
+                  className="hidden h-7 w-1 shrink-0 rounded-full bg-[#2563EB] sm:block"
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <h1 className="truncate font-display text-base font-bold leading-tight tracking-tight text-slate-900 sm:text-lg">
+                    {title}
+                  </h1>
+                  {subtitle ? (
+                    <p className="mt-0.5 truncate text-[11px] font-medium leading-tight text-slate-500 sm:text-xs">
+                      {subtitle}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
 
-          {actions && (
-            <div className="flex w-full flex-wrap items-center gap-2 animate-fade-in-down sm:w-auto sm:gap-3">
+          {actions ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2 animate-fade-in-down sm:gap-3">
               {actions}
             </div>
-          )}
+          ) : null}
         </header>
 
         <main
-          className={`min-h-0 flex-1 ${scrollable ? 'overflow-y-auto scrollbar-thin' : 'overflow-hidden'}`}
+          className={`relative min-h-0 flex-1 bg-slate-50/40 ${
+            scrollable ? 'overflow-y-auto scrollbar-thin' : 'overflow-hidden'
+          }`}
         >
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/60 to-transparent"
+            aria-hidden
+          />
           {children}
         </main>
       </div>

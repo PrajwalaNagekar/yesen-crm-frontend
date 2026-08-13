@@ -2,9 +2,10 @@ import { Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import PipelinePage from './pages/PipelinePage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
+import CsmProjectsPage from './pages/CsmProjectsPage.jsx';
+import TestimonialsPage from './pages/TestimonialsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
-import { PERMISSIONS } from './utils/permissions.js';
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="pipeline">
             <PipelinePage />
           </ProtectedRoute>
         }
@@ -22,8 +23,24 @@ export default function App() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute permission={PERMISSIONS.USERS_READ}>
+          <ProtectedRoute module="users">
             <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/csm/projects"
+        element={
+          <ProtectedRoute>
+            <CsmProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/testimonials"
+        element={
+          <ProtectedRoute>
+            <TestimonialsPage />
           </ProtectedRoute>
         }
       />
