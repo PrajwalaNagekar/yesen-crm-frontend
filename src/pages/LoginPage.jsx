@@ -185,11 +185,11 @@ export default function LoginPage() {
               <span className="font-display text-lg font-bold text-slate-900">Yesen CRM</span>
             </div>
 
-            <div className="mb-8 text-center lg:text-left">
-              <h2 className="font-display text-4xl font-bold tracking-tight text-[#1D4ED8] sm:text-[2.5rem]">
+            <div className="mb-8 text-center">
+              <h2 className="font-display text-5xl font-bold tracking-tight text-[#1D4ED8] sm:text-6xl">
                 Welcome
               </h2>
-              <p className="mt-2 text-sm text-slate-500">Sign in to continue</p>
+              <p className="mt-3 text-sm text-slate-500 sm:text-base">Sign in to continue</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -256,10 +256,10 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="text-center">
                 <button
                   type="button"
-                  className="text-xs font-medium text-slate-500 transition-colors duration-200 hover:text-[#1D4ED8]"
+                  className="text-xs font-medium text-slate-500 transition-colors duration-200 hover:text-[#1D4ED8] sm:text-sm"
                 >
                   Forgot password?
                 </button>
