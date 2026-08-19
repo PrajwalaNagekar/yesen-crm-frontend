@@ -1,10 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as projectsApi from '../api/projects.js';
 
-export function useProjects({ page = 1, limit = 9 } = {}) {
+export function useProjects({ page = 1, limit = 9, status } = {}) {
   return useQuery({
-    queryKey: ['projects', { page, limit }],
-    queryFn: () => projectsApi.fetchProjects({ page, limit }),
+    queryKey: ['projects', { page, limit, status }],
+    queryFn: () => projectsApi.fetchProjects({ page, limit, status }),
     placeholderData: keepPreviousData,
   });
 }

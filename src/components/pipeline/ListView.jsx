@@ -1,6 +1,6 @@
 import { AlertCircle, Inbox, ArrowUpRight } from 'lucide-react';
 import Avatar from '../common/Avatar.jsx';
-import Spinner from '../common/Spinner.jsx';
+import SkeletonTable from '../common/loaders/SkeletonTable.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import {
   formatCurrency,
@@ -29,9 +29,21 @@ export default function ListView({
 }) {
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3">
-        <Spinner size={28} />
-        <p className="text-sm text-slate-400">Loading list…</p>
+      <div className="flex h-full flex-col p-3 sm:p-5 lg:p-6">
+        <SkeletonTable
+          minWidth="min-w-[720px]"
+          rows={8}
+          showActions={false}
+          mobileWithAvatar
+          columns={[
+            { key: 'client', label: 'Client', withAvatar: true },
+            { key: 'stage', label: 'Stage' },
+            { key: 'owner', label: 'Owner' },
+            { key: 'source', label: 'Source' },
+            { key: 'value', label: 'Value' },
+            { key: 'updated', label: 'Updated' },
+          ]}
+        />
       </div>
     );
   }

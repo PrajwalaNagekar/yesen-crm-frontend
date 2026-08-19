@@ -19,6 +19,7 @@ export default function UserDetailModal({ user, canUpdate, onClose, onRequestDel
   const updateUser = useUpdateUser();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
+    email: user?.email || '',
     role: user?.role || 'staff',
     active: user?.active !== false,
     permissions: normalizePermissions(user?.permissions),
@@ -28,6 +29,7 @@ export default function UserDetailModal({ user, canUpdate, onClose, onRequestDel
     if (!user) return;
     setEditing(false);
     setForm({
+      email: user.email || '',
       role: user.role || 'staff',
       active: user.active !== false,
       permissions: normalizePermissions(user.permissions),
@@ -45,6 +47,7 @@ export default function UserDetailModal({ user, canUpdate, onClose, onRequestDel
       {
         id: user._id,
         updates: {
+          email: form.email.trim(),
           role,
           active: isAdminRole(role) ? true : form.active,
           permissions: isAdminRole(role) ? [] : form.permissions,
@@ -75,6 +78,9 @@ export default function UserDetailModal({ user, canUpdate, onClose, onRequestDel
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-xl font-bold text-slate-900">{user.name}</p>
             <p className="mt-0.5 text-sm text-slate-500">@{user.username}</p>
+            {user.email ? (
+              <p className="mt-0.5 truncate text-sm text-slate-500">{user.email}</p>
+            ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1 ${
@@ -100,6 +106,15 @@ export default function UserDetailModal({ user, canUpdate, onClose, onRequestDel
 
         {editing ? (
           <div className="space-y-4">
+            <Input
+              label="Email"
+              name={`modal-email-${user._id}`}
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="jane@company.com"
+              autoComplete="email"
+            />
             <Input
               label="Role"
               name={`modal-role-${user._id}`}

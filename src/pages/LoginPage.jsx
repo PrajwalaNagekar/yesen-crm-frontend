@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import {
   AlertCircle,
   Compass,
@@ -69,6 +69,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const successMessage = location.state?.message || '';
 
   if (status === 'authenticated') {
     return (
@@ -84,7 +85,6 @@ export default function LoginPage() {
     setError('');
     setIsSubmitting(true);
     try {
-      console.log('username,password', username, password);
       const loggedInUser = await login(username, password);
       navigate(resolvePostAuthPath(loggedInUser, location.state?.from?.pathname), { replace: true });
     } catch (err) {
@@ -145,7 +145,7 @@ export default function LoginPage() {
               />
             </div>
             <span className="font-display text-lg font-semibold tracking-tight text-white">
-              Yesen CRM
+              YESEN CRM
             </span>
           </div>
 
@@ -182,8 +182,8 @@ export default function LoginPage() {
                   className="h-8 w-auto object-contain"
                 />
               </div>
-              <span className="font-display text-lg font-bold text-slate-900">Yesen CRM</span>
-            </div>
+              <span className="font-display text-lg font-bold text-slate-900">YESEN CRM</span>
+            </div>  
 
             <div className="mb-8 text-center">
               <h2 className="font-display text-5xl font-bold tracking-tight text-[#1D4ED8] sm:text-6xl">
@@ -257,13 +257,20 @@ export default function LoginPage() {
               </div>
 
               <div className="text-center">
-                <button
-                  type="button"
+                <Link
+                  to="/forgot-password"
+                  state={{ username: username.trim() }}
                   className="text-xs font-medium text-slate-500 transition-colors duration-200 hover:text-[#1D4ED8] sm:text-sm"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
+
+              {successMessage ? (
+                <div className="rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                  {successMessage}
+                </div>
+              ) : null}
 
               {error && (
                 <div

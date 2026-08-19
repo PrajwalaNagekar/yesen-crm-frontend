@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ImagePlus, Upload, X } from 'lucide-react';
 import Input from '../common/Input.jsx';
+import Select from '../common/Select.jsx';
+import { PROJECT_STATUSES } from '../../utils/projectStatus.js';
 import Textarea from '../common/Textarea.jsx';
 import Button from '../common/Button.jsx';
 import { useCreateProject, useUpdateProject } from '../../hooks/useProjects.js';
@@ -14,9 +16,10 @@ const EMPTY_FORM = {
   type: '',
   deployed: '',
   technology: '',
+  status: 'ongoing',
 };
 
-export default function ProjectForm({ project, onClose, onSuccess }) {
+export default function ProjectForm({ project, defaultStatus = 'ongoing', onClose, onSuccess }) {
   const toast = useToast();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
@@ -31,8 +34,9 @@ export default function ProjectForm({ project, onClose, onSuccess }) {
           type: project.type ?? '',
           deployed: project.deployed ?? '',
           technology: project.technology ?? '',
+          status: project.status ?? 'ongoing',
         }
-      : EMPTY_FORM
+      : { ...EMPTY_FORM, status: defaultStatus }
   );
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(() =>
@@ -116,6 +120,18 @@ export default function ProjectForm({ project, onClose, onSuccess }) {
           value={form.deployed}
           onChange={(e) => update('deployed', e.target.value)}
         />
+        <Select
+          label="Status"
+          name="status"
+          value={form.status}
+          onChange={(e) => update('status', e.target.value)}
+        >
+          {PROJECT_STATUSES.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
         <div className="sm:col-span-2">
           <Input
             label="Technology"

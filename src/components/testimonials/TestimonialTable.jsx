@@ -4,6 +4,8 @@ import { formatRelativeTime } from '../../utils/format.js';
 export default function TestimonialTable({ testimonials, onEdit, onDelete }) {
   if (!testimonials?.length) return null;
 
+  const showActions = Boolean(onEdit || onDelete);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/40">
       <div className="hidden overflow-x-auto md:block">
@@ -16,7 +18,9 @@ export default function TestimonialTable({ testimonials, onEdit, onDelete }) {
               <th className="w-32 px-3 py-3.5 font-semibold">Location</th>
               <th className="w-32 px-3 py-3.5 font-semibold">Added by</th>
               <th className="w-36 px-3 py-3.5 font-semibold">Added at</th>
-              <th className="w-24 px-5 py-3.5 text-right font-semibold">Actions</th>
+              {showActions ? (
+                <th className="w-24 px-5 py-3.5 text-right font-semibold">Actions</th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -55,28 +59,34 @@ export default function TestimonialTable({ testimonials, onEdit, onDelete }) {
                     </p>
                   ) : null}
                 </td>
-                <td className="px-5 py-4 align-top">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(item)}
-                      className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"
-                      aria-label={`Edit ${item.name}`}
-                      title="Edit"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(item)}
-                      className="rounded-xl border border-transparent p-2 text-slate-400 transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-600"
-                      aria-label={`Delete ${item.name}`}
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+                {showActions ? (
+                  <td className="px-5 py-4 align-top">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {onEdit ? (
+                        <button
+                          type="button"
+                          onClick={() => onEdit(item)}
+                          className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"
+                          aria-label={`Edit ${item.name}`}
+                          title="Edit"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      ) : null}
+                      {onDelete ? (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(item)}
+                          className="rounded-xl border border-transparent p-2 text-slate-400 transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Delete ${item.name}`}
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -94,24 +104,30 @@ export default function TestimonialTable({ testimonials, onEdit, onDelete }) {
                   {[item.designation, item.location].filter(Boolean).join(' · ') || '—'}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-1">
-                <button
-                  type="button"
-                  onClick={() => onEdit(item)}
-                  className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500"
-                  aria-label={`Edit ${item.name}`}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(item)}
-                  className="rounded-xl p-2 text-slate-400"
-                  aria-label={`Delete ${item.name}`}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+              {showActions ? (
+                <div className="flex shrink-0 gap-1">
+                  {onEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(item)}
+                      className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500"
+                      aria-label={`Edit ${item.name}`}
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  ) : null}
+                  {onDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(item)}
+                      className="rounded-xl p-2 text-slate-400"
+                      aria-label={`Delete ${item.name}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
             <p className="mt-3 text-sm leading-relaxed text-slate-600">
               {item.testimonial || '—'}

@@ -1,6 +1,6 @@
 import { AlertCircle, Inbox } from 'lucide-react';
 import KanbanColumn from './KanbanColumn.jsx';
-import Spinner from '../common/Spinner.jsx';
+import { SkeletonKanban } from '../common/loaders/SkeletonCard.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 
 function BoardCanvas({ children }) {
@@ -31,10 +31,7 @@ export default function KanbanBoard({
   if (isLoading) {
     return (
       <BoardCanvas>
-        <div className="flex h-full flex-col items-center justify-center gap-3">
-          <Spinner size={28} />
-          <p className="text-sm font-medium text-slate-500">Loading pipeline…</p>
-        </div>
+        <SkeletonKanban columns={6} cardsPerColumn={3} />
       </BoardCanvas>
     );
   }

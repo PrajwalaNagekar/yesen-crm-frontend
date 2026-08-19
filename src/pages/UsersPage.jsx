@@ -5,7 +5,7 @@ import UserForm from '../components/users/UserForm.jsx';
 import UserList from '../components/users/UserList.jsx';
 import Modal from '../components/common/Modal.jsx';
 import Button from '../components/common/Button.jsx';
-import Spinner from '../components/common/Spinner.jsx';
+import SkeletonTable from '../components/common/loaders/SkeletonTable.jsx';
 import { useUsers } from '../hooks/useUsers.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { PERMISSIONS, hasPermission } from '../utils/permissions.js';
@@ -33,9 +33,17 @@ export default function UsersPage() {
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
           {isLoading ? (
-            <div className="flex h-48 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm">
-              <Spinner size={24} />
-            </div>
+            <SkeletonTable
+              minWidth="min-w-[760px]"
+              rows={6}
+              showActions
+              columns={[
+                { key: 'member', label: 'Team member', withAvatar: true },
+                { key: 'role', label: 'Role', width: 'w-28' },
+                { key: 'status', label: 'Status', width: 'w-36' },
+                { key: 'permissions', label: 'Permissions', width: 'w-40' },
+              ]}
+            />
           ) : isError ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-white px-6 py-12 text-center shadow-sm">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-500">

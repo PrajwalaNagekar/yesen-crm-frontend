@@ -11,8 +11,8 @@ function buildProjectFormData(fields, imageFile) {
   return formData;
 }
 
-export function fetchProjects({ page = 1, limit = 9 } = {}) {
-  return apiRequest('/projects', { params: { page, limit } });
+export function fetchProjects({ page = 1, limit = 9, status } = {}) {
+  return apiRequest('/projects', { params: { page, limit, status } });
 }
 
 export function fetchProject(id) {

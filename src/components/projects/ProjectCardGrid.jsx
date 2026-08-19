@@ -1,7 +1,8 @@
 import { MapPin, Pencil, Trash2 } from 'lucide-react';
 import { resolveUploadUrl } from '../../utils/media.js';
+import { getProjectStatusLabel, getProjectStatusStyle } from '../../utils/projectStatus.js';
 
-export default function ProjectCardGrid({ projects, onEdit, onDelete }) {
+export default function ProjectCardGrid({ projects, onView, onEdit, onDelete }) {
   if (!projects?.length) return null;
 
   return (
@@ -12,7 +13,16 @@ export default function ProjectCardGrid({ projects, onEdit, onDelete }) {
         return (
           <article
             key={project._id}
-            className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60"
+            role="button"
+            tabIndex={0}
+            onClick={() => onView?.(project)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onView?.(project);
+              }
+            }}
+            className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
           >
             <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 to-blue-50">
               {imageSrc ? (
@@ -26,23 +36,42 @@ export default function ProjectCardGrid({ projects, onEdit, onDelete }) {
                   No image
                 </div>
               )}
-              <div className="absolute right-3 top-3 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={() => onEdit(project)}
-                  className="rounded-xl border border-white/80 bg-white/95 p-2 text-slate-600 shadow-md transition-colors hover:text-[#2563EB]"
-                  aria-label={`Edit ${project.name}`}
+              <div className="absolute left-3 top-3">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${getProjectStatusStyle(
+                    project.status
+                  )}`}
                 >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(project)}
-                  className="rounded-xl border border-white/80 bg-white/95 p-2 text-slate-600 shadow-md transition-colors hover:text-red-600"
-                  aria-label={`Delete ${project.name}`}
-                >
-                  <Trash2 size={16} />
-                </button>
+                  {getProjectStatusLabel(project.status)}
+                </span>
+              </div>
+              <div className="absolute right-3 top-3 flex gap-2">
+                {onEdit ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(project);
+                    }}
+                    className="rounded-xl border border-white/80 bg-white/95 p-2 text-slate-600 shadow-md transition-colors hover:text-[#2563EB]"
+                    aria-label={`Edit ${project.name}`}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                ) : null}
+                {onDelete ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(project);
+                    }}
+                    className="rounded-xl border border-white/80 bg-white/95 p-2 text-slate-600 shadow-md transition-colors hover:text-red-600"
+                    aria-label={`Delete ${project.name}`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                ) : null}
               </div>
             </div>
 

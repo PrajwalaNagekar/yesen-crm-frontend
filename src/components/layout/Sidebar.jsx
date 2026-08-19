@@ -22,15 +22,25 @@ const NAV_ITEMS = [
     id: 'csm',
     label: 'CSM',
     icon: Briefcase,
-    children: [{ to: '/csm/projects', label: 'Projects', icon: FolderKanban }],
+    children: [{ to: '/csm/projects', label: 'Projects', icon: FolderKanban, module: 'projects' }],
   },
-  { type: 'link', to: '/testimonials', label: 'Testimonials', icon: MessageSquareQuote },
+  { type: 'link', to: '/testimonials', label: 'Testimonials', icon: MessageSquareQuote, module: 'testimonials' },
   { type: 'link', to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 function canViewNavItem(user, item) {
+  if (item.type === 'group') {
+    return item.children.some((child) =>
+      child.module ? hasModuleAccess(user, child.module) : true
+    );
+  }
   if (item.module) return hasModuleAccess(user, item.module);
   if (item.adminOnly) return user?.role === 'admin';
+  return true;
+}
+
+function canViewNavChild(user, child) {
+  if (child.module) return hasModuleAccess(user, child.module);
   return true;
 }
 
@@ -72,12 +82,15 @@ function NavItemLink({ item, onNavigate }) {
   );
 }
 
-function NavItemGroup({ item, onNavigate, expanded, onToggle }) {
+function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
   const location = useLocation();
-  const isChildActive = item.children.some(
+  const visibleChildren = item.children.filter((child) => canViewNavChild(user, child));
+  const isChildActive = visibleChildren.some(
     (child) => location.pathname === child.to || location.pathname.startsWith(`${child.to}/`)
   );
   const isOpen = expanded || isChildActive;
+
+  if (!visibleChildren.length) return null;
 
   return (
     <div>
@@ -112,7 +125,7 @@ function NavItemGroup({ item, onNavigate, expanded, onToggle }) {
           isOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        {item.children.map((child) => (
+        {visibleChildren.map((child) => (
           <li key={child.to}>
             <NavLink
               to={child.to}
@@ -175,7 +188,7 @@ export default function Sidebar({ collapsed, onNavigate }) {
           </div>
           <div className="min-w-0">
             <p className="truncate font-display text-base font-bold leading-tight tracking-tight text-white">
-              Yesen CRM
+              YESEN CRM
             </p>
             <p className="truncate text-[11px] font-medium leading-tight tracking-wide text-blue-100/90">
               Inquiry management
@@ -195,6 +208,7 @@ export default function Sidebar({ collapsed, onNavigate }) {
               {item.type === 'group' ? (
                 <NavItemGroup
                   item={item}
+                  user={user}
                   onNavigate={onNavigate}
                   expanded={csmOpen}
                   onToggle={() => setCsmOpen((open) => !open)}

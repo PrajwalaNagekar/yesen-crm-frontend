@@ -143,6 +143,9 @@ export default function UserList({ users }) {
                           ) : null}
                         </p>
                         <p className="truncate text-sm text-slate-500">@{user.username}</p>
+                        {user.email ? (
+                          <p className="truncate text-sm text-slate-500">{user.email}</p>
+                        ) : null}
                       </div>
                       <UserRowActions
                         user={user}
@@ -206,7 +209,10 @@ export default function UserList({ users }) {
                               <span className="ml-2 text-xs font-medium text-slate-400">(you)</span>
                             ) : null}
                           </p>
-                          <p className="truncate text-sm text-slate-500">@{user.username}</p>
+                          <p className="truncate text-sm text-slate-500">
+                            @{user.username}
+                            {user.email ? ` · ${user.email}` : ''}
+                          </p>
                         </div>
                       </div>
                     </td>

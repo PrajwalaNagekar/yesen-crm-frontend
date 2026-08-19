@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import PipelinePage from './pages/PipelinePage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import CsmProjectsPage from './pages/CsmProjectsPage.jsx';
@@ -11,6 +12,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       <Route
         path="/"
@@ -31,7 +33,7 @@ export default function App() {
       <Route
         path="/csm/projects"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="projects">
             <CsmProjectsPage />
           </ProtectedRoute>
         }
@@ -39,7 +41,7 @@ export default function App() {
       <Route
         path="/testimonials"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="testimonials">
             <TestimonialsPage />
           </ProtectedRoute>
         }

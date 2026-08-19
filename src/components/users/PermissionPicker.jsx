@@ -3,9 +3,16 @@ import { ALL_PERMISSIONS, PERMISSION_GROUPS, isAdminRole } from '../../utils/per
 import { applyPermissionToggle } from '../../utils/permissionToggle.js';
 
 function PermissionCheckbox({ id, label, checked, disabled, onChange }) {
+  function handleToggle(e) {
+    if (disabled) return;
+    e.preventDefault();
+    onChange(!checked);
+  }
+
   return (
     <label
       htmlFor={id}
+      onClick={handleToggle}
       className={`group flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
         disabled
           ? 'cursor-default border-slate-200 bg-slate-50/80'
@@ -29,7 +36,8 @@ function PermissionCheckbox({ id, label, checked, disabled, onChange }) {
         className="sr-only"
         checked={checked}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
+        readOnly
+        tabIndex={-1}
       />
       <span className={`text-sm font-medium ${disabled ? 'text-slate-600' : 'text-brand-900'}`}>{label}</span>
     </label>

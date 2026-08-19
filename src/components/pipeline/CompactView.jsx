@@ -1,15 +1,33 @@
 import { AlertCircle, Inbox } from 'lucide-react';
 import InquiryCard from './InquiryCard.jsx';
-import Spinner from '../common/Spinner.jsx';
+import SkeletonBone from '../common/loaders/SkeletonBone.jsx';
+import SkeletonCard from '../common/loaders/SkeletonCard.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { STAGE_META } from '../../utils/format.js';
 
 export default function CompactView({ columns, isLoading, error, onOpenInquiry }) {
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3">
-        <Spinner size={28} />
-        <p className="text-sm text-slate-400">Loading…</p>
+      <div className="scrollbar-thin h-full overflow-y-auto p-3 sm:p-5">
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <section
+              key={index}
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+            >
+              <header className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <SkeletonBone className="h-2 w-2 shrink-0 rounded-full" rounded="rounded-full" />
+                  <SkeletonBone className="h-4 w-24" />
+                </div>
+                <SkeletonBone className="h-4 w-6 rounded-full" rounded="rounded-full" />
+              </header>
+              <div className="grid grid-cols-1 gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <SkeletonCard variant="inquiry" count={4} compact inline />
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     );
   }

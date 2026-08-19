@@ -3,19 +3,29 @@ import { AlertCircle, MessageSquareQuote, Plus } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout.jsx';
 import Modal from '../components/common/Modal.jsx';
 import Button from '../components/common/Button.jsx';
-import Spinner from '../components/common/Spinner.jsx';
+import SkeletonTable from '../components/common/loaders/SkeletonTable.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Pagination from '../components/common/Pagination.jsx';
 import TestimonialForm from '../components/testimonials/TestimonialForm.jsx';
 import TestimonialTable from '../components/testimonials/TestimonialTable.jsx';
 import { useTestimonials, useDeleteTestimonial } from '../hooks/useTestimonials.js';
+import { useAuth } from '../hooks/useAuth.js';
 import { useToast } from '../context/ToastContext.jsx';
+import {
+  canCreateTestimonial,
+  canDeleteTestimonial,
+  canUpdateTestimonial,
+} from '../utils/permissions.js';
 
 const PAGE_SIZE = 10;
 
 export default function TestimonialsPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const canAdd = canCreateTestimonial(user);
+  const canEdit = canUpdateTestimonial(user);
+  const canDelete = canDeleteTestimonial(user);
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, error, refetch, isFetching } = useTestimonials({
     page,
@@ -68,18 +78,30 @@ export default function TestimonialsPage() {
       title="Testimonials"
       subtitle={`${pagination.total} testimonial${pagination.total === 1 ? '' : 's'}`}
       actions={
-        <Button size="md" onClick={() => setShowAddModal(true)}>
-          <Plus size={16} />
-          Add testimonial
-        </Button>
+        canAdd ? (
+          <Button size="md" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} />
+            Add testimonial
+          </Button>
+        ) : null
       }
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
           {isLoading ? (
-            <div className="flex h-48 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm">
-              <Spinner size={24} />
-            </div>
+            <SkeletonTable
+              minWidth="min-w-[900px]"
+              rows={8}
+              showActions
+              columns={[
+                { key: 'name', label: 'Name', withAvatar: false },
+                { key: 'testimonial', label: 'Testimonial', lines: 3 },
+                { key: 'designation', label: 'Designation', width: 'w-36' },
+                { key: 'location', label: 'Location', width: 'w-32' },
+                { key: 'addedBy', label: 'Added by', width: 'w-32' },
+                { key: 'addedAt', label: 'Added at', width: 'w-36' },
+              ]}
+            />
           ) : isError ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-white px-6 py-12 text-center shadow-sm">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-500">
@@ -101,8 +123,8 @@ export default function TestimonialsPage() {
               <div className={isFetching ? 'opacity-70 transition-opacity' : ''}>
                 <TestimonialTable
                   testimonials={testimonials}
-                  onEdit={setEditTestimonial}
-                  onDelete={setPendingDelete}
+                  onEdit={canEdit ? setEditTestimonial : undefined}
+                  onDelete={canDelete ? setPendingDelete : undefined}
                 />
               </div>
               <Pagination

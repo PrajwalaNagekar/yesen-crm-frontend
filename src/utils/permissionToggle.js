@@ -1,5 +1,17 @@
 import { PERMISSIONS } from './permissions.js';
 
+const PROJECT_PERMISSIONS = [
+  PERMISSIONS.PROJECTS_CREATE,
+  PERMISSIONS.PROJECTS_UPDATE,
+  PERMISSIONS.PROJECTS_DELETE,
+];
+
+const TESTIMONIAL_PERMISSIONS = [
+  PERMISSIONS.TESTIMONIALS_CREATE,
+  PERMISSIONS.TESTIMONIALS_UPDATE,
+  PERMISSIONS.TESTIMONIALS_DELETE,
+];
+
 /** Apply permission toggle rules (control/create imply read). */
 export function applyPermissionToggle(current, permission, checked) {
   let next = checked
@@ -22,6 +34,14 @@ export function applyPermissionToggle(current, permission, checked) {
     next = [...new Set([...next, PERMISSIONS.USERS_READ])];
   }
 
+  if (checked && PROJECT_PERMISSIONS.includes(permission)) {
+    next = [...new Set([...next, PERMISSIONS.PROJECTS_READ])];
+  }
+
+  if (checked && TESTIMONIAL_PERMISSIONS.includes(permission)) {
+    next = [...new Set([...next, PERMISSIONS.TESTIMONIALS_READ])];
+  }
+
   if (!checked && permission === PERMISSIONS.PIPELINE_READ) {
     next = next.filter((p) => p !== PERMISSIONS.PIPELINE_CONTROL);
   }
@@ -33,6 +53,14 @@ export function applyPermissionToggle(current, permission, checked) {
         p !== PERMISSIONS.USERS_UPDATE &&
         p !== PERMISSIONS.USERS_DELETE
     );
+  }
+
+  if (!checked && permission === PERMISSIONS.PROJECTS_READ) {
+    next = next.filter((p) => !PROJECT_PERMISSIONS.includes(p));
+  }
+
+  if (!checked && permission === PERMISSIONS.TESTIMONIALS_READ) {
+    next = next.filter((p) => !TESTIMONIAL_PERMISSIONS.includes(p));
   }
 
   return next;

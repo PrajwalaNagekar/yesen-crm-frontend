@@ -18,7 +18,7 @@ import Avatar from '../common/Avatar.jsx';
 import Button from '../common/Button.jsx';
 import Select from '../common/Select.jsx';
 import Textarea from '../common/Textarea.jsx';
-import Spinner from '../common/Spinner.jsx';
+import SkeletonDrawer from '../common/loaders/SkeletonDrawer.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import TagBadge from './TagBadge.jsx';
 import { usePipeline } from '../../hooks/usePipeline.js';
@@ -752,14 +752,7 @@ export default function InquiryDrawer({
         aria-label="Inquiry details"
       >
         {isLoading || !inquiry ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3">
-            {open && (
-              <>
-                <Spinner size={28} />
-                <p className="text-sm text-slate-400">Loading…</p>
-              </>
-            )}
-          </div>
+          <SkeletonDrawer />
         ) : (
           <InquiryDrawerContent
             key={inquiry._id}

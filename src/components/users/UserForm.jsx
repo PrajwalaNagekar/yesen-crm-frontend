@@ -9,6 +9,7 @@ import { isAdminRole } from '../../utils/permissions.js';
 const initialForm = {
   name: '',
   username: '',
+  email: '',
   password: '',
   role: 'staff',
   active: true,
@@ -31,6 +32,10 @@ export default function UserForm({ onClose, onSuccess }) {
       next.username = 'Username must be 3-30 letters/numbers, no spaces';
     }
     if (form.password.length < 8) next.password = 'Minimum 8 characters';
+    const email = form.email.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      next.email = 'Enter a valid email address';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -43,6 +48,7 @@ export default function UserForm({ onClose, onSuccess }) {
     const payload = {
       name: form.name.trim(),
       username: form.username.trim(),
+      email: form.email.trim(),
       password: form.password,
       role,
       active: isAdminRole(role) ? true : form.active,
@@ -81,6 +87,16 @@ export default function UserForm({ onClose, onSuccess }) {
           onChange={(e) => update('name', e.target.value)}
           error={errors.name}
           placeholder="Jane Doe"
+        />
+        <Input
+          label="Email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={(e) => update('email', e.target.value)}
+          error={errors.email}
+          placeholder="jane@company.com"
+          autoComplete="email"
         />
         <Input
           label="Temporary password"
