@@ -169,32 +169,12 @@ export default function Sidebar({ collapsed, onNavigate }) {
       }`}
     >
       {/* Header — height matches AppLayout header (h-[4.75rem]) */}
-      <div className="relative flex h-[4.75rem] shrink-0 items-center overflow-hidden border-b border-blue-600/10 bg-gradient-to-br from-[#2563EB] via-[#1d4ed8] to-[#1e40af] px-5">
-        <div
-          className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl"
-          aria-hidden
+      <div className="relative flex h-[4.75rem] w-full shrink-0 items-center justify-center border-b border-slate-200/80 px-4">
+        <img
+          src="/logo/yesen.png"
+          alt="Yesen Technologies"
+          className="h-full w-full object-contain"
         />
-        <div
-          className="pointer-events-none absolute -bottom-8 left-2 h-20 w-20 rounded-full bg-blue-300/20 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex min-w-0 items-center gap-3">
-          <div className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-white px-2 py-1.5 shadow-lg shadow-blue-900/20 ring-1 ring-white/25">
-            <img
-              src="/logo/yesen-logo.svg"
-              alt="Yesen Technologies"
-              className="h-7 w-auto object-contain"
-            />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate font-display text-base font-bold leading-tight tracking-tight text-white">
-              YESEN CRM
-            </p>
-            <p className="truncate text-[11px] font-medium leading-tight tracking-wide text-blue-100/90">
-              Inquiry management
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Navigation */}

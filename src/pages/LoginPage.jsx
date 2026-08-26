@@ -136,17 +136,6 @@ export default function LoginPage() {
         <AirplaneRoute className="pointer-events-none absolute right-[10%] top-[42%] h-16 w-24 text-white/40" />
 
         <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-14">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center rounded-2xl bg-white px-3 py-2 shadow-lg shadow-black/10 ring-1 ring-white/30">
-              <img
-                src="/logo/yesen-logo.svg"
-                alt="Yesen Technologies"
-                className="h-9 w-auto object-contain"
-              />
-            </div>
-          
-          </div>
-
           <div className="max-w-md">
             <h1 className="font-display text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
               Cleaner, smarter marine transportation
@@ -171,23 +160,13 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-10 sm:px-10 lg:px-16 xl:px-20">
           <div className="w-full max-w-[420px] animate-fade-in-up">
-            {/* Mobile brand */}
-            <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-              <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 shadow-md shadow-slate-200/60 ring-1 ring-slate-100">
-                <img
-                  src="/logo/yesen-logo.svg"
-                  alt="Yesen Technologies"
-                  className="h-8 w-auto object-contain"
-                />
-              </div>
-              {/* <span className="font-display text-lg font-bold text-slate-900">YESEN CRM</span> */}
-            </div>  
-
             <div className="mb-8 text-center">
-              <h2 className="font-display text-5xl font-bold tracking-tight text-[#1D4ED8] sm:text-6xl">
-                Welcome
-              </h2>
-              <p className="mt-3 text-sm text-slate-500 sm:text-base">Sign in to continue</p>
+              <img
+                src="/logo/yesen.png"
+                alt="Yesen Technologies"
+                className="mx-auto h-24 w-auto object-contain sm:h-28"
+              />
+              <p className="mt-4 text-sm text-slate-500 sm:text-base">Sign in to continue</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
