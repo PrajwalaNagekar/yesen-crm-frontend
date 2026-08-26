@@ -144,9 +144,7 @@ export default function LoginPage() {
                 className="h-9 w-auto object-contain"
               />
             </div>
-            <span className="font-display text-lg font-semibold tracking-tight text-white">
-              YESEN CRM
-            </span>
+          
           </div>
 
           <div className="max-w-md">
