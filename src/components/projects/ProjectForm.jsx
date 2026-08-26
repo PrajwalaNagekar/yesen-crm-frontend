@@ -184,7 +184,7 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-700">Upload project image</p>
-              <p className="mt-1 text-xs text-slate-500">PNG, JPG, WEBP, or GIF</p>
+              <p className="mt-1 text-xs text-slate-500">PNG, JPG, or JPEG</p>
             </div>
             <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
           </label>
