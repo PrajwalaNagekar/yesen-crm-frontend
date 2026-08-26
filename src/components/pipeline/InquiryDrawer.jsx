@@ -89,6 +89,8 @@ function InquiryDrawerContent({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Vessel detail local states (committed on blur/change)
+  const [vesselType, setVesselType] = useState(inquiry.vesselType ?? '');
+  const [retrofitStatus, setRetrofitStatus] = useState(inquiry.retrofitStatus ?? '');
   const [vesselLength, setVesselLength] = useState(inquiry.vesselLength ?? '');
   const [operatingArea, setOperatingArea] = useState(inquiry.operatingArea ?? '');
   const [dailyOperatingHours, setDailyOperatingHours] = useState(inquiry.dailyOperatingHours ?? '');
@@ -355,32 +357,44 @@ function InquiryDrawerContent({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {/* Vessel Type */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">Vessel Type</label>
-              <Select
-                value={inquiry.vesselType ?? ''}
-                onChange={(e) => patchInquiry({ vesselType: e.target.value || null })}
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                Vessel Type
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. Ferry"
+                value={vesselType}
+                onChange={(e) => setVesselType(e.target.value)}
+                onBlur={() => {
+                  if (!readOnly && vesselType !== (inquiry.vesselType ?? ''))
+                    patchInquiry({ vesselType: vesselType || null });
+                }}
+                readOnly={readOnly}
                 disabled={readOnly}
-              >
-                <option value="">— Select —</option>
-                {['Ferry', 'Tour boat', 'House boat', 'Trawler', 'Yatch', 'Workboat', 'Patrol boat', 'other'].map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </Select>
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
+              />
             </div>
 
             {/* Retrofit Status */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">Retrofit Status</label>
-              <Select
-                value={inquiry.retrofitStatus ?? ''}
-                onChange={(e) => patchInquiry({ retrofitStatus: e.target.value || null })}
+              <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                Retrofit Status
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. Retrofit Existing"
+                value={retrofitStatus}
+                onChange={(e) => setRetrofitStatus(e.target.value)}
+                onBlur={() => {
+                  if (!readOnly && retrofitStatus !== (inquiry.retrofitStatus ?? ''))
+                    patchInquiry({ retrofitStatus: retrofitStatus || null });
+                }}
+                readOnly={readOnly}
                 disabled={readOnly}
-              >
-                <option value="">— Select —</option>
-                {['retrofit existing', 'new build', 'not decided yet'].map((v) => (
-                  <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>
-                ))}
-              </Select>
+                className="field-control disabled:cursor-default disabled:bg-slate-50 disabled:text-slate-600"
+              />
             </div>
 
             {/* Vessel Length */}
@@ -499,9 +513,8 @@ function InquiryDrawerContent({
         {/* Quotation */}
         <Section title="Quotation">
           <label
-            className={`flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 ${
-              readOnly ? '' : 'cursor-pointer transition-colors hover:border-brand-200 hover:bg-brand-50/30'
-            }`}
+            className={`flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 ${readOnly ? '' : 'cursor-pointer transition-colors hover:border-brand-200 hover:bg-brand-50/30'
+              }`}
           >
             <div className="min-w-0">
               <p className="text-sm font-semibold text-brand-900">
@@ -664,8 +677,8 @@ function InquiryDrawerContent({
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span
                         className={`rounded-md px-1.5 py-0.5 font-semibold capitalize ${isSystem
-                            ? 'bg-slate-100 text-slate-500'
-                            : 'bg-brand-50 text-brand-700'
+                          ? 'bg-slate-100 text-slate-500'
+                          : 'bg-brand-50 text-brand-700'
                           }`}
                       >
                         {log.type.replace('_', ' ')}
@@ -745,7 +758,7 @@ export default function InquiryDrawer({
       <div
         className={`fixed right-0 top-0 z-50 flex h-screen w-full max-w-xl transform flex-col bg-white shadow-2xl transition-transform duration-300 ease-out sm:border-l sm:border-slate-200 ${open ? 'translate-x-0' : 'translate-x-full'
           }`}
-      
+
 
         role="dialog"
         aria-modal="true"
