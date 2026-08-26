@@ -180,7 +180,7 @@ export default function LoginPage() {
                   className="h-8 w-auto object-contain"
                 />
               </div>
-              <span className="font-display text-lg font-bold text-slate-900">YESEN CRM</span>
+              {/* <span className="font-display text-lg font-bold text-slate-900">YESEN CRM</span> */}
             </div>  
 
             <div className="mb-8 text-center">
