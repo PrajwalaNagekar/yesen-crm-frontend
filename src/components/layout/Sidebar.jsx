@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquareQuote,
+  Package,
+  Layers,
   Settings,
   Users,
 } from 'lucide-react';
@@ -24,6 +26,8 @@ const NAV_ITEMS = [
     icon: Briefcase,
     children: [{ to: '/csm/projects', label: 'Projects', icon: FolderKanban, module: 'projects' }],
   },
+  { type: 'link', to: '/products', label: 'Products', icon: Package, module: 'products' },
+  { type: 'link', to: '/solutions', label: 'Solutions', icon: Layers, module: 'solutions' },
   { type: 'link', to: '/testimonials', label: 'Testimonials', icon: MessageSquareQuote, module: 'testimonials' },
   { type: 'link', to: '/settings', label: 'Settings', icon: Settings },
 ];

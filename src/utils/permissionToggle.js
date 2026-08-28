@@ -6,6 +6,18 @@ const PROJECT_PERMISSIONS = [
   PERMISSIONS.PROJECTS_DELETE,
 ];
 
+const PRODUCT_PERMISSIONS = [
+  PERMISSIONS.PRODUCT_CREATE,
+  PERMISSIONS.PRODUCT_UPDATE,
+  PERMISSIONS.PRODUCT_DELETE,
+];
+
+const SOLUTION_PERMISSIONS = [
+  PERMISSIONS.SOLUTIONS_CREATE,
+  PERMISSIONS.SOLUTIONS_UPDATE,
+  PERMISSIONS.SOLUTIONS_DELETE,
+];
+
 const TESTIMONIAL_PERMISSIONS = [
   PERMISSIONS.TESTIMONIALS_CREATE,
   PERMISSIONS.TESTIMONIALS_UPDATE,
@@ -38,6 +50,14 @@ export function applyPermissionToggle(current, permission, checked) {
     next = [...new Set([...next, PERMISSIONS.PROJECTS_READ])];
   }
 
+  if (checked && PRODUCT_PERMISSIONS.includes(permission)) {
+    next = [...new Set([...next, PERMISSIONS.PRODUCT_READ])];
+  }
+
+  if (checked && SOLUTION_PERMISSIONS.includes(permission)) {
+    next = [...new Set([...next, PERMISSIONS.SOLUTIONS_READ])];
+  }
+
   if (checked && TESTIMONIAL_PERMISSIONS.includes(permission)) {
     next = [...new Set([...next, PERMISSIONS.TESTIMONIALS_READ])];
   }
@@ -57,6 +77,14 @@ export function applyPermissionToggle(current, permission, checked) {
 
   if (!checked && permission === PERMISSIONS.PROJECTS_READ) {
     next = next.filter((p) => !PROJECT_PERMISSIONS.includes(p));
+  }
+
+  if (!checked && permission === PERMISSIONS.PRODUCT_READ) {
+    next = next.filter((p) => !PRODUCT_PERMISSIONS.includes(p));
+  }
+
+  if (!checked && permission === PERMISSIONS.SOLUTIONS_READ) {
+    next = next.filter((p) => !SOLUTION_PERMISSIONS.includes(p));
   }
 
   if (!checked && permission === PERMISSIONS.TESTIMONIALS_READ) {

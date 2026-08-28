@@ -4,6 +4,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import PipelinePage from './pages/PipelinePage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import CsmProjectsPage from './pages/CsmProjectsPage.jsx';
+import ProductsPage from './pages/ProductsPage.jsx';
+import SolutionsPage from './pages/SolutionsPage.jsx';
 import TestimonialsPage from './pages/TestimonialsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
@@ -35,6 +37,22 @@ export default function App() {
         element={
           <ProtectedRoute module="projects">
             <CsmProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute module="products">
+            <ProductsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/solutions"
+        element={
+          <ProtectedRoute module="solutions">
+            <SolutionsPage />
           </ProtectedRoute>
         }
       />

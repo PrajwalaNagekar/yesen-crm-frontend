@@ -13,6 +13,14 @@ export const PERMISSIONS = {
   TESTIMONIALS_READ: 'testimonials.read',
   TESTIMONIALS_UPDATE: 'testimonials.update',
   TESTIMONIALS_DELETE: 'testimonials.delete',
+  PRODUCT_CREATE: 'products.create',
+  PRODUCT_READ: 'products.read',
+  PRODUCT_UPDATE: 'products.update',
+  PRODUCT_DELETE: 'products.delete',
+  SOLUTIONS_CREATE: 'solutions.create',
+  SOLUTIONS_READ: 'solutions.read',
+  SOLUTIONS_UPDATE: 'solutions.update',
+  SOLUTIONS_DELETE: 'solutions.delete',
 };
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS);
@@ -44,6 +52,26 @@ export const PERMISSION_GROUPS = [
       { key: PERMISSIONS.PROJECTS_READ, label: 'Read projects' },
       { key: PERMISSIONS.PROJECTS_UPDATE, label: 'Edit project' },
       { key: PERMISSIONS.PROJECTS_DELETE, label: 'Delete project' },
+    ],
+  },
+  {
+    module: 'products',
+    label: 'Products',
+    permissions: [
+      { key: PERMISSIONS.PRODUCT_CREATE, label: 'Add product' },
+      { key: PERMISSIONS.PRODUCT_READ, label: 'Read products' },
+      { key: PERMISSIONS.PRODUCT_UPDATE, label: 'Edit product' },
+      { key: PERMISSIONS.PRODUCT_DELETE, label: 'Delete product' },
+    ],
+  },
+  {
+    module: 'solutions',
+    label: 'Solutions',
+    permissions: [
+      { key: PERMISSIONS.SOLUTIONS_CREATE, label: 'Add solution' },
+      { key: PERMISSIONS.SOLUTIONS_READ, label: 'Read solutions' },
+      { key: PERMISSIONS.SOLUTIONS_UPDATE, label: 'Edit solution' },
+      { key: PERMISSIONS.SOLUTIONS_DELETE, label: 'Delete solution' },
     ],
   },
   {
@@ -118,6 +146,30 @@ export function canDeleteTestimonial(user) {
   return hasPermission(user, PERMISSIONS.TESTIMONIALS_DELETE);
 }
 
+export function canCreateProduct(user) {
+  return hasPermission(user, PERMISSIONS.PRODUCT_CREATE);
+}
+
+export function canUpdateProduct(user) {
+  return hasPermission(user, PERMISSIONS.PRODUCT_UPDATE);
+}
+
+export function canDeleteProduct(user) {
+  return hasPermission(user, PERMISSIONS.PRODUCT_DELETE);
+}
+
+export function canCreateSolution(user) {
+  return hasPermission(user, PERMISSIONS.SOLUTIONS_CREATE);
+}
+
+export function canUpdateSolution(user) {
+  return hasPermission(user, PERMISSIONS.SOLUTIONS_UPDATE);
+}
+
+export function canDeleteSolution(user) {
+  return hasPermission(user, PERMISSIONS.SOLUTIONS_DELETE);
+}
+
 export function hasModuleAccess(user, module) {
   if (!user || !module) return false;
   if (isAdminRole(user.role)) return true;
@@ -150,6 +202,8 @@ export function getDefaultRoute(user) {
   if (hasModuleAccess(user, 'pipeline')) return '/';
   if (hasModuleAccess(user, 'users')) return '/users';
   if (hasModuleAccess(user, 'projects')) return '/csm/projects';
+  if (hasModuleAccess(user, 'products')) return '/products';
+  if (hasModuleAccess(user, 'solutions')) return '/solutions';
   if (hasModuleAccess(user, 'testimonials')) return '/testimonials';
   return '/settings';
 }
@@ -159,6 +213,8 @@ export function resolvePostAuthPath(user, fromPath) {
     if (fromPath === '/' && hasModuleAccess(user, 'pipeline')) return '/';
     if (fromPath.startsWith('/users') && hasModuleAccess(user, 'users')) return fromPath;
     if (fromPath.startsWith('/csm/projects') && hasModuleAccess(user, 'projects')) return fromPath;
+    if (fromPath.startsWith('/products') && hasModuleAccess(user, 'products')) return fromPath;
+    if (fromPath.startsWith('/solutions') && hasModuleAccess(user, 'solutions')) return fromPath;
     if (fromPath.startsWith('/testimonials') && hasModuleAccess(user, 'testimonials')) return fromPath;
     if (fromPath.startsWith('/settings')) return fromPath;
   }

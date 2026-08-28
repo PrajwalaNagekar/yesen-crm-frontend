@@ -11,6 +11,8 @@ import {
   Download,
   Send,
   Package,
+  Layers,
+  MessageSquare,
   Globe,
   Plus,
 } from 'lucide-react';
@@ -302,7 +304,34 @@ function InquiryDrawerContent({
                 {inquiry.company}
               </p>
             ) : null}
-            {inquiry.productOrServiceName ? (
+            {inquiry.product ? (
+              <p className="flex items-center gap-3 px-2.5 py-2 text-sm text-slate-700">
+                <Package size={16} className="shrink-0 text-slate-400" />
+                <span>
+                  <span className="text-slate-400">Product · </span>
+                  <span className="font-medium text-brand-900">{inquiry.product?.name || inquiry.product}</span>
+                </span>
+              </p>
+            ) : null}
+            {inquiry.solution ? (
+              <p className="flex items-center gap-3 px-2.5 py-2 text-sm text-slate-700">
+                <Layers size={16} className="shrink-0 text-slate-400" />
+                <span>
+                  <span className="text-slate-400">Solution · </span>
+                  <span className="font-medium text-brand-900">{inquiry.solution?.name || inquiry.solution}</span>
+                </span>
+              </p>
+            ) : null}
+            {inquiry.subject ? (
+              <p className="flex items-center gap-3 px-2.5 py-2 text-sm text-slate-700">
+                <MessageSquare size={16} className="shrink-0 text-slate-400" />
+                <span>
+                  <span className="text-slate-400">Subject · </span>
+                  <span className="font-medium text-brand-900">{inquiry.subject}</span>
+                </span>
+              </p>
+            ) : null}
+            {!inquiry.product && !inquiry.solution && inquiry.productOrServiceName ? (
               <p className="flex items-center gap-3 px-2.5 py-2 text-sm text-slate-700">
                 <Package size={16} className="shrink-0 text-slate-400" />
                 <span>

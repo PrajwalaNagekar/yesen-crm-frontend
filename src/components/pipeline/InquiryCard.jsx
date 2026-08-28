@@ -9,7 +9,12 @@ import {
 } from '../../utils/format.js';
 
 export default function InquiryCard({ inquiry, onOpen, onDragStart, compact = false }) {
-  const description = inquiry.productOrServiceName || inquiry.message;
+  const description =
+    inquiry.product?.name ||
+    inquiry.solution?.name ||
+    inquiry.subject ||
+    inquiry.productOrServiceName ||
+    inquiry.message;
   const formattedValue = formatCurrency(inquiry.value);
   const assigneeName = getAssigneeName(inquiry.assignedTo);
   const stageMeta = STAGE_META[inquiry.stage] || STAGE_META.Inquired;

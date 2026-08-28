@@ -5,6 +5,8 @@ import Textarea from '../common/Textarea.jsx';
 import Select from '../common/Select.jsx';
 import Button from '../common/Button.jsx';
 import { useCreateIntake } from '../../hooks/useIntake.js';
+import { useProducts } from '../../hooks/useProducts.js';
+import { useSolutions } from '../../hooks/useSolutions.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 const VESSEL_TYPES = ['Ferry', 'Tour boat', 'House boat', 'Trawler', 'Yatch', 'Workboat', 'Patrol boat', 'other'];
@@ -14,20 +16,14 @@ const INTAKE_CONFIG = {
   product: {
     title: 'Add product inquiry',
     description: 'Creates a new inquiry from a product lead.',
-    productLabel: 'Product name',
-    productRequired: true,
   },
   service: {
     title: 'Add service inquiry',
-    description: 'Creates a new inquiry from a service lead.',
-    productLabel: 'Service name',
-    productRequired: true,
+    description: 'Creates a new inquiry from a service/solution lead.',
   },
   contact: {
     title: 'Add contact inquiry',
     description: 'Creates a new inquiry from a general contact.',
-    productLabel: 'Product or service (optional)',
-    productRequired: false,
   },
 };
 
@@ -37,7 +33,9 @@ const EMPTY_FORM = {
   phone: '',
   company: '',
   message: '',
-  productOrServiceName: '',
+  product: '',
+  solution: '',
+  subject: '',
   sourcePage: 'CRM',
   value: '',
   vesselType: '',
@@ -64,9 +62,12 @@ function buildPayload(form, type) {
     timeLine: form.timeLine.trim() || undefined,
   };
 
-  const productName = form.productOrServiceName.trim();
-  if (productName || type !== 'contact') {
-    payload.productOrServiceName = productName;
+  if (type === 'product') {
+    payload.product = form.product || undefined;
+  } else if (type === 'service') {
+    payload.solution = form.solution || undefined;
+  } else if (type === 'contact') {
+    payload.subject = form.subject.trim() || undefined;
   }
 
   const value = form.value.trim();
@@ -80,6 +81,12 @@ function buildPayload(form, type) {
 export default function IntakeFormModal({ type, open, onClose, onSuccess }) {
   const toast = useToast();
   const createIntake = useCreateIntake();
+  const { data: productsData } = useProducts();
+  const { data: solutionsData } = useSolutions();
+
+  const products = productsData?.products ?? [];
+  const solutions = solutionsData?.solutions ?? [];
+
   const config = INTAKE_CONFIG[type] || INTAKE_CONFIG.contact;
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -102,8 +109,11 @@ export default function IntakeFormModal({ type, open, onClose, onSuccess }) {
       next.email = 'Email or phone is required';
       next.phone = 'Email or phone is required';
     }
-    if (config.productRequired && !form.productOrServiceName.trim()) {
-      next.productOrServiceName = `${config.productLabel} is required`;
+    if (type === 'product' && !form.product) {
+      next.product = 'Product is required';
+    }
+    if (type === 'service' && !form.solution) {
+      next.solution = 'Solution is required';
     }
     if (form.value.trim() !== '' && Number.isNaN(Number(form.value))) {
       next.value = 'Enter a valid number';
@@ -168,13 +178,51 @@ export default function IntakeFormModal({ type, open, onClose, onSuccess }) {
             value={form.company}
             onChange={(e) => update('company', e.target.value)}
           />
-          <Input
-            label={config.productLabel}
-            name="productOrServiceName"
-            value={form.productOrServiceName}
-            onChange={(e) => update('productOrServiceName', e.target.value)}
-            error={errors.productOrServiceName}
-          />
+
+          {type === 'product' ? (
+            <Select
+              label="Product"
+              name="product"
+              value={form.product}
+              onChange={(e) => update('product', e.target.value)}
+              error={errors.product}
+            >
+              <option value="">Select product</option>
+              {products.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.name} {p.label ? `— ${p.label}` : ''}
+                </option>
+              ))}
+            </Select>
+          ) : null}
+
+          {type === 'service' ? (
+            <Select
+              label="Solution"
+              name="solution"
+              value={form.solution}
+              onChange={(e) => update('solution', e.target.value)}
+              error={errors.solution}
+            >
+              <option value="">Select solution</option>
+              {solutions.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
+          ) : null}
+
+          {type === 'contact' ? (
+            <Input
+              label="Subject"
+              name="subject"
+              value={form.subject}
+              onChange={(e) => update('subject', e.target.value)}
+              placeholder="e.g. General enquiry, Partnership"
+            />
+          ) : null}
+
           <Input
             label="Estimated value"
             name="value"
