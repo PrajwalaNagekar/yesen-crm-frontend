@@ -110,6 +110,11 @@ export default function ProductForm({ product, onClose, onSuccess }) {
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (!isEdit && !imageFile) {
+      toast.error('Product image is required');
+      return;
+    }
+
     const mutation = isEdit ? updateProduct : createProduct;
     const payload = isEdit
       ? { id: product._id, fields: form, imageFile }
@@ -267,7 +272,9 @@ export default function ProductForm({ product, onClose, onSuccess }) {
 
       {/* Image Upload */}
       <div>
-        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">Product Image</p>
+        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">
+          Product Image <span className="ml-0.5 text-red-500">*</span>
+        </p>
         {imagePreview ? (
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 shadow-sm">
             <div className="relative aspect-[16/10] w-full bg-slate-100">

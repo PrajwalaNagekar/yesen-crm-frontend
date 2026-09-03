@@ -1,12 +1,15 @@
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Eye, Trash2 } from 'lucide-react';
 import { resolveUploadUrl } from '../../utils/media.js';
 
-export default function SolutionCard({ solution, onEdit, onDelete }) {
+export default function SolutionCard({ solution, onView, onEdit, onDelete }) {
   const imageUrl = resolveUploadUrl(solution.image?.url);
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+      <div 
+        className="aspect-[4/3] w-full overflow-hidden bg-slate-100 cursor-pointer"
+        onClick={() => onView?.(solution)}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -28,13 +31,14 @@ export default function SolutionCard({ solution, onEdit, onDelete }) {
       </div>
 
       <div className="p-5">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-            #{solution.serialNo}
-          </span>
-        </div>
+      
 
-        <h3 className="text-lg font-bold text-slate-900">{solution.name}</h3>
+        <h3 
+          className="text-lg font-bold text-slate-900 cursor-pointer hover:text-[#2563EB] transition-colors"
+          onClick={() => onView?.(solution)}
+        >
+          {solution.name}
+        </h3>
 
         {solution.tagline ? (
           <p className="mt-1 text-sm font-medium text-slate-500">{solution.tagline}</p>
@@ -58,12 +62,22 @@ export default function SolutionCard({ solution, onEdit, onDelete }) {
           ) : null}
         </div>
 
-        {(onEdit || onDelete) && (
+        {(onView || onEdit || onDelete) && (
           <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+            {onView ? (
+              <button
+                type="button"
+                onClick={() => onView(solution)}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <Eye size={14} />
+                View
+              </button>
+            ) : null}
             {onEdit ? (
               <button
                 type="button"
-                onClick={onEdit}
+                onClick={() => onEdit(solution)}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 <Edit2 size={14} />
@@ -73,7 +87,7 @@ export default function SolutionCard({ solution, onEdit, onDelete }) {
             {onDelete ? (
               <button
                 type="button"
-                onClick={onDelete}
+                onClick={() => onDelete(solution)}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
               >
                 <Trash2 size={14} />

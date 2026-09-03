@@ -16,10 +16,10 @@ const EMPTY_FORM = {
   type: '',
   deployed: '',
   technology: '',
-  status: 'ongoing',
+  status: 'inprogress',
 };
 
-export default function ProjectForm({ project, defaultStatus = 'ongoing', onClose, onSuccess }) {
+export default function ProjectForm({ project, defaultStatus = 'inprogress', onClose, onSuccess }) {
   const toast = useToast();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
@@ -34,7 +34,7 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
           type: project.type ?? '',
           deployed: project.deployed ?? '',
           technology: project.technology ?? '',
-          status: project.status ?? 'ongoing',
+          status: project.status ?? 'inprogress',
         }
       : { ...EMPTY_FORM, status: defaultStatus }
   );
@@ -42,14 +42,22 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
   const [imagePreview, setImagePreview] = useState(() =>
     project?.imageUrl ? resolveUploadUrl(project.imageUrl) : null
   );
+  const [existingSitePhotos, setExistingSitePhotos] = useState(() => project?.sitePhotography ?? []);
+  const [newSitePhotoFiles, setNewSitePhotoFiles] = useState([]);
+  const [newSitePhotoPreviews, setNewSitePhotoPreviews] = useState([]);
 
   useEffect(() => {
     return () => {
       if (imagePreview?.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
       }
+      newSitePhotoPreviews.forEach((preview) => {
+        if (preview?.startsWith('blob:')) {
+          URL.revokeObjectURL(preview);
+        }
+      });
     };
-  }, [imagePreview]);
+  }, [imagePreview, newSitePhotoPreviews]);
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -74,12 +82,57 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
     setImagePreview(isEdit && project?.imageUrl ? resolveUploadUrl(project.imageUrl) : null);
   }
 
+  function handleSitePhotosChange(e) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setNewSitePhotoFiles((current) => [...current, ...files]);
+    setNewSitePhotoPreviews((current) => [...current, ...previews]);
+    e.target.value = '';
+  }
+
+  function removeExistingSitePhoto(index) {
+    setExistingSitePhotos((current) => current.filter((_, i) => i !== index));
+  }
+
+  function removeNewSitePhoto(index) {
+    setNewSitePhotoFiles((current) => current.filter((_, i) => i !== index));
+    setNewSitePhotoPreviews((current) => {
+      const preview = current[index];
+      if (preview?.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+      return current.filter((_, i) => i !== index);
+    });
+  }
+
   function handleSubmit(e) {
     e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error('Project name is required');
+      return;
+    }
+    if (!isEdit && !imageFile) {
+      toast.error('Project image is required');
+      return;
+    }
+
     const mutation = isEdit ? updateProject : createProject;
+    const sitePhotography = isEdit ? existingSitePhotos : [];
     const payload = isEdit
-      ? { id: project._id, fields: form, imageFile }
-      : { fields: form, imageFile };
+      ? {
+          id: project._id,
+          fields: form,
+          imageFile,
+          sitePhotographyFiles: newSitePhotoFiles,
+          sitePhotography,
+        }
+      : {
+          fields: form,
+          imageFile,
+          sitePhotographyFiles: newSitePhotoFiles,
+          sitePhotography: [],
+        };
 
     mutation.mutate(payload, {
       onSuccess: () => {
@@ -99,6 +152,7 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
         <Input
           label="Name"
           name="name"
+          required
           value={form.name}
           onChange={(e) => update('name', e.target.value)}
         />
@@ -152,7 +206,9 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">Image</p>
+        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">
+          Image <span className="ml-0.5 text-red-500">*</span>
+        </p>
         {imagePreview ? (
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 shadow-sm">
             <div className="relative aspect-[16/10] w-full bg-slate-100">
@@ -189,6 +245,68 @@ export default function ProjectForm({ project, defaultStatus = 'ongoing', onClos
             <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
           </label>
         )}
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">
+          Site photography <span className="text-xs font-normal text-slate-400">(optional)</span>
+        </p>
+        {(existingSitePhotos.length > 0 || newSitePhotoPreviews.length > 0) && (
+          <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {existingSitePhotos.map((url, index) => (
+              <div
+                key={`existing-${url}-${index}`}
+                className="relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+              >
+                <img
+                  src={resolveUploadUrl(url)}
+                  alt={`Site photo ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeExistingSitePhoto(index)}
+                  className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-slate-500 shadow-md transition-colors hover:text-red-600"
+                  aria-label={`Remove site photo ${index + 1}`}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+            {newSitePhotoPreviews.map((src, index) => (
+              <div
+                key={`new-${src}-${index}`}
+                className="relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+              >
+                <img src={src} alt={`New site photo ${index + 1}`} className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeNewSitePhoto(index)}
+                  className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-slate-500 shadow-md transition-colors hover:text-red-600"
+                  aria-label={`Remove new site photo ${index + 1}`}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-6 py-6 text-center transition-colors hover:border-[#2563EB]/40 hover:bg-blue-50/30">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#2563EB] shadow-sm ring-1 ring-blue-100">
+            <ImagePlus size={18} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-700">Add site photos</p>
+            <p className="mt-1 text-xs text-slate-500">Upload multiple images from the project site</p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleSitePhotosChange}
+            className="hidden"
+          />
+        </label>
       </div>
 
       <div className="flex gap-3 border-t border-slate-100 pt-4">

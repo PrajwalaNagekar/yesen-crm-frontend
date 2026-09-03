@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as productsApi from '../api/products.js';
 
-export function useProducts() {
+export function useProducts({ q, sort } = {}) {
   return useQuery({
-    queryKey: ['products'],
-    queryFn: () => productsApi.fetchProducts(),
+    queryKey: ['products', { q, sort }],
+    queryFn: () => productsApi.fetchProducts({ q, sort }),
   });
 }
 

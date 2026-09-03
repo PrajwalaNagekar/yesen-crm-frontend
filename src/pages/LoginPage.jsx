@@ -146,7 +146,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Yesen Technologies
+            © {new Date().getFullYear()} YESEN Technologies
           </p>
         </div>
       </aside>

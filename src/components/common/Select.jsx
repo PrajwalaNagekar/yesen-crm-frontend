@@ -1,14 +1,16 @@
-export default function Select({ label, error, className = '', id, children, ...props }) {
+export default function Select({ label, error, required, className = '', id, children, ...props }) {
   const selectId = id || props.name;
   return (
     <div className={className}>
       {label && (
         <label htmlFor={selectId} className="mb-1.5 block text-sm font-semibold tracking-tight text-brand-900">
           {label}
+          {required && <span className="ml-0.5 text-red-500">*</span>}
         </label>
       )}
       <select
         id={selectId}
+        required={required}
         className={`field-control appearance-none bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat pr-10 ${
           error ? 'field-control-error' : ''
         }`}

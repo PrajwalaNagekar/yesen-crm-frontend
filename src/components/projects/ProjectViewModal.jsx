@@ -67,6 +67,30 @@ export default function ProjectViewModal({ project, onClose, onEdit, onDelete })
           </div>
         ) : null}
 
+        {project.sitePhotography?.length ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Site photography</p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {project.sitePhotography.map((url, index) => {
+                const src = resolveUploadUrl(url);
+                if (!src) return null;
+                return (
+                  <div
+                    key={`${url}-${index}`}
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                  >
+                    <img
+                      src={src}
+                      alt={`${project.name || 'Project'} site photo ${index + 1}`}
+                      className="aspect-[4/3] h-full w-full object-cover"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-2">
           <DetailField label="Type" value={project.type} />
           <DetailField label="Deployed" value={project.deployed} />

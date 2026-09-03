@@ -2,9 +2,9 @@ export function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return null;
   const num = Number(value);
   if (Number.isNaN(num)) return null;
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     maximumFractionDigits: 0,
   }).format(num);
 }

@@ -21,8 +21,8 @@ function buildProductFormData(fields, imageFile) {
   return formData;
 }
 
-export function fetchProducts() {
-  return apiRequest('/products-csm');
+export function fetchProducts({ q, sort } = {}) {
+  return apiRequest('/products-csm', { params: { q, sort } });
 }
 
 export function fetchProduct(id) {

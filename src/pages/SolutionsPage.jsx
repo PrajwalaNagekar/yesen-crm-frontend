@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { AlertCircle, Layers, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AlertCircle, Layers } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout.jsx';
 import Modal from '../components/common/Modal.jsx';
 import SkeletonCard from '../components/common/loaders/SkeletonCard.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
+import CatalogueListToolbar from '../components/common/CatalogueListToolbar.jsx';
 import SolutionForm from '../components/solutions/SolutionForm.jsx';
 import SolutionCard from '../components/solutions/SolutionCard.jsx';
+import SolutionViewModal from '../components/solutions/SolutionViewModal.jsx';
 import { useSolutions, useDeleteSolution } from '../hooks/useSolutions.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useToast } from '../context/ToastContext.jsx';
@@ -23,14 +25,27 @@ export default function SolutionsPage() {
   const canEdit = canUpdateSolution(user);
   const canDelete = canDeleteSolution(user);
 
-  const { data, isLoading, isError, error, refetch } = useSolutions();
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sort, setSort] = useState('newest');
+
+  const { data, isLoading, isError, error, refetch } = useSolutions({
+    q: debouncedSearch || undefined,
+    sort,
+  });
   const deleteSolution = useDeleteSolution();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewSolution, setViewSolution] = useState(null);
   const [editSolution, setEditSolution] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const solutions = data?.solutions ?? [];
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   function handleConfirmDelete() {
     if (!pendingDelete) return;
@@ -57,24 +72,16 @@ export default function SolutionsPage() {
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-5 py-4 shadow-sm backdrop-blur-sm">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">All Solutions</h2>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Manage solutions shown on the public website
-              </p>
-            </div>
-            {canAdd ? (
-              <button
-                type="button"
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
-              >
-                <Plus size={18} />
-                Add Solution
-              </button>
-            ) : null}
-          </div>
+          <CatalogueListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search solutions by name, tagline, or description…"
+            sort={sort}
+            onSortChange={setSort}
+            onAdd={() => setShowAddModal(true)}
+            addLabel="Add Solution"
+            canAdd={canAdd}
+          />
 
           {isLoading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -102,6 +109,7 @@ export default function SolutionsPage() {
                 <SolutionCard
                   key={solution._id}
                   solution={solution}
+                  onView={setViewSolution}
                   onEdit={canEdit ? () => setEditSolution(solution) : undefined}
                   onDelete={canDelete ? () => setPendingDelete(solution) : undefined}
                 />
@@ -111,13 +119,24 @@ export default function SolutionsPage() {
             <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 px-6 py-16">
               <EmptyState
                 icon={Layers}
-                title="No solutions yet"
-                description="Add your first solution using the Add Solution button above."
+                title={debouncedSearch ? 'No solutions match your search' : 'No solutions yet'}
+                description={
+                  debouncedSearch
+                    ? 'Try adjusting your search or sort options.'
+                    : 'Add your first solution using the Add Solution button above.'
+                }
               />
             </div>
           )}
         </div>
       </div>
+
+      <SolutionViewModal
+        solution={viewSolution}
+        onClose={() => setViewSolution(null)}
+        onEdit={canEdit ? setEditSolution : undefined}
+        onDelete={canDelete ? setPendingDelete : undefined}
+      />
 
       <Modal
         open={showAddModal}

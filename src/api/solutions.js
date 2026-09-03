@@ -18,8 +18,8 @@ function buildSolutionFormData(fields, imageFile) {
   return formData;
 }
 
-export function fetchSolutions() {
-  return apiRequest('/solutions-csm');
+export function fetchSolutions({ q, sort } = {}) {
+  return apiRequest('/solutions-csm', { params: { q, sort } });
 }
 
 export function fetchSolution(id) {

@@ -19,6 +19,7 @@ export default function InquiryCard({ inquiry, onOpen, onDragStart, compact = fa
   const assigneeName = getAssigneeName(inquiry.assignedTo);
   const stageMeta = STAGE_META[inquiry.stage] || STAGE_META.Inquired;
   const isLost = inquiry.stage === 'Lost';
+  const isUnread = !inquiry.isViewed;
   const tagTone = stageMeta.tagTone || 'default';
 
   const draggable = Boolean(onDragStart);
@@ -29,7 +30,9 @@ export default function InquiryCard({ inquiry, onOpen, onDragStart, compact = fa
   const cardSurface = `rounded-2xl border text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/25 ${stageMeta.cardBg} ${
     isLost
       ? 'border-rose-200/90 hover:border-rose-300 hover:shadow-rose-100/60'
-      : `${stageMeta.border} hover:border-[#2563EB]/30 hover:shadow-blue-500/5`
+      : isUnread
+        ? 'border-[#2563EB]/35 ring-1 ring-[#2563EB]/15'
+        : `${stageMeta.border} hover:border-[#2563EB]/30 hover:shadow-blue-500/5`
   } ${cursorClass}`;
 
   if (compact) {
@@ -43,10 +46,15 @@ export default function InquiryCard({ inquiry, onOpen, onDragStart, compact = fa
       >
         <div className="flex items-center gap-3">
           <Avatar name={inquiry.clientName} size={36} />
-          <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            {isUnread ? (
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" aria-label="Unread" />
+            ) : null}
             <p className={`truncate text-sm font-semibold ${isLost ? 'text-rose-950' : 'text-slate-900'}`}>
               {inquiry.clientName}
             </p>
+          </div>
             <p className="truncate text-xs text-slate-500">
               {inquiry.company || SOURCE_LABELS[inquiry.source] || '—'}
             </p>
@@ -70,12 +78,19 @@ export default function InquiryCard({ inquiry, onOpen, onDragStart, compact = fa
       <div className="flex items-start gap-3">
         <Avatar name={inquiry.clientName} size={40} />
         <div className="min-w-0 flex-1">
-          <p className={`truncate text-[0.9375rem] font-semibold leading-snug ${isLost ? 'text-rose-950' : 'text-slate-900'}`}>
-            {inquiry.clientName}
-          </p>
-          {inquiry.company ? (
-            <p className="mt-0.5 truncate text-sm text-slate-600">{inquiry.company}</p>
-          ) : null}
+          <div className="flex items-start gap-2">
+            {isUnread ? (
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" aria-label="Unread" />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <p className={`truncate text-[0.9375rem] font-semibold leading-snug ${isLost ? 'text-rose-950' : 'text-slate-900'}`}>
+                {inquiry.clientName}
+              </p>
+              {inquiry.company ? (
+                <p className="mt-0.5 truncate text-sm text-slate-600">{inquiry.company}</p>
+              ) : null}
+            </div>
+          </div>
         </div>
         {onDragStart ? (
           <GripVertical

@@ -6,6 +6,7 @@ import SkeletonCard from '../components/common/loaders/SkeletonCard.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Pagination from '../components/common/Pagination.jsx';
+import CatalogueListToolbar from '../components/common/CatalogueListToolbar.jsx';
 import ProjectForm from '../components/projects/ProjectForm.jsx';
 import ProjectCardGrid from '../components/projects/ProjectCardGrid.jsx';
 import ProjectStatusFilters from '../components/projects/ProjectStatusFilters.jsx';
@@ -30,11 +31,16 @@ export default function CsmProjectsPage() {
   const canDelete = canDeleteProject(user);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sort, setSort] = useState('newest');
   const apiStatus = statusFilter === 'all' ? undefined : statusFilter;
   const { data, isLoading, isError, error, refetch, isFetching } = useProjects({
     page,
     limit: PAGE_SIZE,
     status: apiStatus,
+    q: debouncedSearch || undefined,
+    sort,
   });
   const deleteProject = useDeleteProject();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -53,8 +59,13 @@ export default function CsmProjectsPage() {
   };
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     setPage(1);
-  }, [statusFilter]);
+  }, [statusFilter, debouncedSearch, sort]);
 
   useEffect(() => {
     if (pagination.totalPages > 0 && page > pagination.totalPages) {
@@ -94,12 +105,18 @@ export default function CsmProjectsPage() {
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          <ProjectStatusFilters
-            value={statusFilter}
-            onChange={setStatusFilter}
+          <CatalogueListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search projects by name, location, type, technology…"
+            sort={sort}
+            onSortChange={setSort}
             onAdd={() => setShowAddModal(true)}
+            addLabel="Add project"
             canAdd={canAdd}
-          />
+          >
+            <ProjectStatusFilters value={statusFilter} onChange={setStatusFilter} />
+          </CatalogueListToolbar>
 
           {isLoading ? (
             <SkeletonCard count={9} />
@@ -143,11 +160,15 @@ export default function CsmProjectsPage() {
               <EmptyState
                 icon={FolderKanban}
                 title={
-                  statusFilter === 'all'
+                  statusFilter === 'all' && !debouncedSearch
                     ? 'No projects yet'
-                    : `No ${getProjectFilterLabel(statusFilter).toLowerCase()} projects`
+                    : `No ${getProjectFilterLabel(statusFilter).toLowerCase()} projects match your filters`
                 }
-                description="Add a project using the Add project button above."
+                description={
+                  debouncedSearch || statusFilter !== 'all'
+                    ? 'Try adjusting your search or filters.'
+                    : 'Add a project using the Add project button above.'
+                }
               />
             </div>
           )}
@@ -169,7 +190,7 @@ export default function CsmProjectsPage() {
         size="lg"
       >
         <ProjectForm
-          defaultStatus={statusFilter === 'all' ? 'ongoing' : statusFilter}
+          defaultStatus={statusFilter === 'all' ? 'inprogress' : statusFilter}
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false);

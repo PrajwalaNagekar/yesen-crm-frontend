@@ -1,34 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Briefcase,
   ChevronDown,
   FolderKanban,
   LayoutDashboard,
+  Layers,
   LogOut,
   MessageSquareQuote,
   Package,
-  Layers,
   Settings,
   Users,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { hasModuleAccess } from '../../utils/permissions.js';
+import { useUnreadCounts } from '../../hooks/useUnreadCounts.js';
 import Avatar from '../common/Avatar.jsx';
+
+function NavBadge({ count }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-[#2563EB] px-1.5 text-[10px] font-bold leading-none text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
 const NAV_ITEMS = [
   { type: 'link', to: '/', label: 'Pipeline', icon: LayoutDashboard, end: true, module: 'pipeline' },
-  { type: 'link', to: '/users', label: 'Users', icon: Users, module: 'users' },
   {
     type: 'group',
     id: 'csm',
-    label: 'CSM',
+    label: 'CMS',
     icon: Briefcase,
-    children: [{ to: '/csm/projects', label: 'Projects', icon: FolderKanban, module: 'projects' }],
+    children: [
+      { to: '/csm/projects', label: 'Projects', icon: FolderKanban, module: 'projects' },
+      { to: '/products', label: 'Products', icon: Package, module: 'products' },
+      { to: '/solutions', label: 'Solutions', icon: Layers, module: 'solutions' },
+    ],
   },
-  { type: 'link', to: '/products', label: 'Products', icon: Package, module: 'products' },
-  { type: 'link', to: '/solutions', label: 'Solutions', icon: Layers, module: 'solutions' },
   { type: 'link', to: '/testimonials', label: 'Testimonials', icon: MessageSquareQuote, module: 'testimonials' },
+  { type: 'link', to: '/users', label: 'Users', icon: Users, module: 'users' },
   { type: 'link', to: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -48,17 +60,16 @@ function canViewNavChild(user, child) {
   return true;
 }
 
-function NavItemLink({ item, onNavigate }) {
+function NavItemLink({ item, onNavigate, badge }) {
   return (
     <NavLink
       to={item.to}
       end={item.end}
       onClick={onNavigate}
       className={({ isActive }) =>
-        `group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
-          isActive
-            ? 'translate-x-0.5 bg-blue-50 text-[#1e40af] shadow-sm shadow-blue-500/10 ring-1 ring-blue-100'
-            : 'text-slate-600 hover:translate-x-1 hover:bg-slate-50 hover:text-slate-900'
+        `group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${isActive
+          ? 'translate-x-0.5 bg-blue-50 text-[#1e40af] shadow-sm shadow-blue-500/10 ring-1 ring-blue-100'
+          : 'text-slate-600 hover:translate-x-1 hover:bg-slate-50 hover:text-slate-900'
         }`
       }
     >
@@ -71,15 +82,15 @@ function NavItemLink({ item, onNavigate }) {
             />
           ) : null}
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${
-              isActive
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${isActive
                 ? 'bg-white text-[#2563EB] shadow-sm ring-1 ring-blue-100'
                 : 'bg-slate-100/80 text-slate-400 group-hover:bg-white group-hover:text-slate-600 group-hover:shadow-sm'
-            }`}
+              }`}
           >
             <item.icon size={18} strokeWidth={isActive ? 2.25 : 2} />
           </span>
           <span className="truncate">{item.label}</span>
+          <NavBadge count={badge} />
         </>
       )}
     </NavLink>
@@ -92,7 +103,7 @@ function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
   const isChildActive = visibleChildren.some(
     (child) => location.pathname === child.to || location.pathname.startsWith(`${child.to}/`)
   );
-  const isOpen = expanded || isChildActive;
+  const isOpen = expanded;
 
   if (!visibleChildren.length) return null;
 
@@ -102,18 +113,16 @@ function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`group flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
-          isChildActive
+        className={`group flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all duration-200 ${isChildActive
             ? 'bg-blue-50/80 text-[#1e40af] ring-1 ring-blue-100'
             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-        }`}
+          }`}
       >
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${
-            isChildActive
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${isChildActive
               ? 'bg-white text-[#2563EB] shadow-sm ring-1 ring-blue-100'
               : 'bg-slate-100/80 text-slate-400 group-hover:bg-white group-hover:text-slate-600 group-hover:shadow-sm'
-          }`}
+            }`}
         >
           <item.icon size={18} strokeWidth={isChildActive ? 2.25 : 2} />
         </span>
@@ -125,9 +134,8 @@ function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
       </button>
 
       <ul
-        className={`mt-1 space-y-1 overflow-hidden pl-3 transition-all duration-200 ${
-          isOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`mt-1 space-y-1 overflow-hidden pl-3 transition-all duration-200 ${isOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
+          }`}
       >
         {visibleChildren.map((child) => (
           <li key={child.to}>
@@ -135,10 +143,9 @@ function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
               to={child.to}
               onClick={onNavigate}
               className={({ isActive }) =>
-                `group relative flex items-center gap-3 rounded-xl py-2.5 pl-9 pr-3.5 text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-50 text-[#1e40af] shadow-sm shadow-blue-500/10 ring-1 ring-blue-100'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                `group relative flex items-center gap-3 rounded-xl py-2.5 pl-9 pr-3.5 text-sm font-medium transition-all duration-200 ${isActive
+                  ? 'bg-blue-50 text-[#1e40af] shadow-sm shadow-blue-500/10 ring-1 ring-blue-100'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`
               }
             >
@@ -162,15 +169,32 @@ function NavItemGroup({ item, user, onNavigate, expanded, onToggle }) {
 
 export default function Sidebar({ collapsed, onNavigate }) {
   const { user, logout } = useAuth();
+  const { data: unreadCounts } = useUnreadCounts();
   const location = useLocation();
   const displayName = user?.name || user?.username || 'User';
-  const [csmOpen, setCsmOpen] = useState(() => location.pathname.startsWith('/csm'));
+
+  const isCsmActive =
+    location.pathname.startsWith('/csm') ||
+    location.pathname.startsWith('/products') ||
+    location.pathname.startsWith('/solutions');
+
+  const [csmOpen, setCsmOpen] = useState(isCsmActive);
+
+  useEffect(() => {
+    if (isCsmActive) {
+      setCsmOpen(true);
+    }
+  }, [location.pathname]);
+
+  const navBadges = {
+    '/': unreadCounts?.inquiries ?? 0,
+    '/testimonials': unreadCounts?.testimonials ?? 0,
+  };
 
   return (
     <aside
-      className={`flex h-screen shrink-0 flex-col border-r border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md transition-all duration-300 ease-out ${
-        collapsed ? 'w-0 overflow-hidden border-r-0' : 'w-72'
-      }`}
+      className={`flex h-screen shrink-0 flex-col border-r border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md transition-all duration-300 ease-out ${collapsed ? 'w-0 overflow-hidden border-r-0' : 'w-72'
+        }`}
     >
       {/* Header — height matches AppLayout header (h-[4.75rem]) */}
       <div className="relative flex h-[4.75rem] w-full shrink-0 items-center justify-center border-b border-slate-200/80 px-4">
@@ -198,7 +222,11 @@ export default function Sidebar({ collapsed, onNavigate }) {
                   onToggle={() => setCsmOpen((open) => !open)}
                 />
               ) : (
-                <NavItemLink item={item} onNavigate={onNavigate} />
+                <NavItemLink
+                  item={item}
+                  onNavigate={onNavigate}
+                  badge={navBadges[item.to]}
+                />
               )}
             </li>
           ))}

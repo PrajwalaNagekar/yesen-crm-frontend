@@ -28,6 +28,7 @@ function useInvalidatingMutation(mutationFn) {
     mutationFn,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['board'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
       const id = typeof variables === 'object' ? variables.id : variables;
       if (id) queryClient.invalidateQueries({ queryKey: ['inquiry', id] });
     },
@@ -75,6 +76,19 @@ export function useDeleteDocumentMutation() {
     onSuccess: (_data, { inquiryId }) => {
       queryClient.invalidateQueries({ queryKey: ['inquiry', inquiryId] });
       queryClient.invalidateQueries({ queryKey: ['board'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+    },
+  });
+}
+
+export function useMarkInquiryViewed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => inquiriesApi.markInquiryViewed(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['board'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+      if (id) queryClient.invalidateQueries({ queryKey: ['inquiry', id] });
     },
   });
 }

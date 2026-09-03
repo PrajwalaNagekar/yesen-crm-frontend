@@ -14,6 +14,9 @@ export default function KanbanColumn({
   const meta = STAGE_META[stage] || STAGE_META.Inquired;
   const isEmpty = cards.length === 0;
   const isLost = stage === 'Lost';
+  const unviewedCount = cards.filter((card) => !card.isViewed).length;
+  const badgeCount = unviewedCount > 0 ? unviewedCount : cards.length;
+  const isUnreadBadge = unviewedCount > 0;
 
   function handleDragOver(e) {
     if (!canControl) return;
@@ -69,10 +72,14 @@ export default function KanbanColumn({
         </span>
         <span
           className={`shrink-0 min-w-[1.75rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ring-1 ${
-            isEmpty ? 'bg-white/60 text-slate-400 ring-slate-200/80' : meta.badge
+            isEmpty
+              ? 'bg-white/60 text-slate-400 ring-slate-200/80'
+              : isUnreadBadge
+                ? 'bg-[#2563EB] text-white ring-[#2563EB]/30'
+                : meta.badge
           }`}
         >
-          {cards.length}
+          {badgeCount}
         </span>
       </div>
 

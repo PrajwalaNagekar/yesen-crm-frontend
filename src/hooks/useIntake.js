@@ -17,6 +17,7 @@ export function useCreateIntake() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['board'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
     },
   });
 }

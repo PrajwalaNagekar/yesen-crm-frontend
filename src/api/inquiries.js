@@ -12,6 +12,10 @@ export function updateInquiry(id, updates) {
   return apiRequest(`/inquiries/${id}`, { method: 'PATCH', body: updates });
 }
 
+export function markInquiryViewed(id) {
+  return apiRequest(`/inquiries/${id}/viewed`, { method: 'PATCH' });
+}
+
 export function moveInquiryStage(id, stage, lostReason) {
   return apiRequest(`/inquiries/${id}/stage`, { method: 'PATCH', body: { stage, lostReason } });
 }

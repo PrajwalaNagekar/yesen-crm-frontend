@@ -16,6 +16,10 @@ export function updateTestimonial(id, updates) {
   return apiRequest(`/testimonials/${id}`, { method: 'PATCH', body: updates });
 }
 
+export function markTestimonialViewed(id) {
+  return apiRequest(`/testimonials/${id}/viewed`, { method: 'PATCH' });
+}
+
 export function deleteTestimonial(id) {
   return apiRequest(`/testimonials/${id}`, { method: 'DELETE' });
 }

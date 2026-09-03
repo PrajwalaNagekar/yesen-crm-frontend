@@ -7,3 +7,7 @@ export function fetchPipeline() {
 export function fetchTeam() {
   return apiRequest('/meta/team');
 }
+
+export function fetchUnreadCounts() {
+  return apiRequest('/meta/unread-counts');
+}

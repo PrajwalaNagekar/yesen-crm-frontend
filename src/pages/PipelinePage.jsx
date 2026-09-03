@@ -9,7 +9,7 @@ import LostReasonDialog from '../components/pipeline/LostReasonDialog.jsx';
 import AddInquiryMenu from '../components/pipeline/AddInquiryMenu.jsx';
 import IntakeFormModal from '../components/pipeline/IntakeFormModal.jsx';
 import { useAuth } from '../hooks/useAuth.js';
-import { useBoard, useMoveStage, useUpdateInquiry } from '../hooks/useInquiries.js';
+import { useBoard, useMoveStage, useUpdateInquiry, useMarkInquiryViewed } from '../hooks/useInquiries.js';
 import { useTeam } from '../hooks/useTeam.js';
 import { usePipeline } from '../hooks/usePipeline.js';
 import { useToast } from '../context/ToastContext.jsx';
@@ -68,8 +68,21 @@ export default function PipelinePage() {
   const { data: columns, isLoading, error } = useBoard(filters);
   const moveStage = useMoveStage();
   const updateInquiry = useUpdateInquiry();
+  const markInquiryViewed = useMarkInquiryViewed();
 
   const totalCount = columns?.reduce((sum, col) => sum + col.cards.length, 0) ?? 0;
+  const unviewedCount =
+    columns?.reduce(
+      (sum, col) => sum + col.cards.filter((card) => !card.isViewed).length,
+      0
+    ) ?? 0;
+
+  function handleOpenInquiry(inquiry) {
+    setSelectedInquiryId(inquiry._id);
+    if (!inquiry.isViewed) {
+      markInquiryViewed.mutate(inquiry._id);
+    }
+  }
 
   function requestMove(inquiryId, stage) {
     if (stage === 'Lost') {
@@ -106,7 +119,9 @@ export default function PipelinePage() {
   return (
     <AppLayout
       title="Inquiry Pipeline"
-      subtitle={`${totalCount} ${totalCount === 1 ? 'inquiry' : 'inquiries'}`}
+      subtitle={`${totalCount} ${totalCount === 1 ? 'inquiry' : 'inquiries'}${
+        unviewedCount > 0 ? ` · ${unviewedCount} new` : ''
+      }`}
       actions={
         canControl ? <AddInquiryMenu onSelect={setIntakeType} /> : null
       }
@@ -132,7 +147,7 @@ export default function PipelinePage() {
               isLoading={isLoading}
               error={error}
               canControl={canControl}
-              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+              onOpenInquiry={handleOpenInquiry}
               onDropCard={requestMove}
             />
           )}
@@ -144,7 +159,7 @@ export default function PipelinePage() {
               canControl={canControl}
               stages={pipeline?.stages || []}
               team={team}
-              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+              onOpenInquiry={handleOpenInquiry}
               onStageChange={requestMove}
               onAssign={handleAssign}
             />
@@ -154,7 +169,7 @@ export default function PipelinePage() {
               columns={columns || []}
               isLoading={isLoading}
               error={error}
-              onOpenInquiry={(inquiry) => setSelectedInquiryId(inquiry._id)}
+              onOpenInquiry={handleOpenInquiry}
             />
           )}
         </div>
@@ -180,7 +195,7 @@ export default function PipelinePage() {
         open={Boolean(intakeType)}
         onClose={() => setIntakeType(null)}
         onSuccess={(inquiry) => {
-          if (inquiry?._id) setSelectedInquiryId(inquiry._id);
+          if (inquiry?._id) handleOpenInquiry(inquiry);
         }}
       />
     </AppLayout>

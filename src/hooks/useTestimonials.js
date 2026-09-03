@@ -13,7 +13,10 @@ export function useCreateTestimonial() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: testimonialsApi.createTestimonial,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['testimonials'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+    },
   });
 }
 
@@ -21,7 +24,10 @@ export function useUpdateTestimonial() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, updates }) => testimonialsApi.updateTestimonial(id, updates),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['testimonials'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+    },
   });
 }
 
@@ -29,6 +35,20 @@ export function useDeleteTestimonial() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id }) => testimonialsApi.deleteTestimonial(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['testimonials'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+    },
+  });
+}
+
+export function useMarkTestimonialViewed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => testimonialsApi.markTestimonialViewed(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+    },
   });
 }

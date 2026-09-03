@@ -9,7 +9,8 @@ import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Pagination from '../components/common/Pagination.jsx';
 import TestimonialForm from '../components/testimonials/TestimonialForm.jsx';
 import TestimonialTable from '../components/testimonials/TestimonialTable.jsx';
-import { useTestimonials, useDeleteTestimonial } from '../hooks/useTestimonials.js';
+import TestimonialViewModal from '../components/testimonials/TestimonialViewModal.jsx';
+import { useTestimonials, useDeleteTestimonial, useUpdateTestimonial, useMarkTestimonialViewed } from '../hooks/useTestimonials.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useToast } from '../context/ToastContext.jsx';
 import {
@@ -32,9 +33,13 @@ export default function TestimonialsPage() {
     limit: PAGE_SIZE,
   });
   const deleteTestimonial = useDeleteTestimonial();
+  const updateTestimonial = useUpdateTestimonial();
+  const markTestimonialViewed = useMarkTestimonialViewed();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewTestimonial, setViewTestimonial] = useState(null);
   const [editTestimonial, setEditTestimonial] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
   const testimonials = data?.testimonials ?? [];
   const pagination = data?.pagination ?? {
@@ -51,6 +56,33 @@ export default function TestimonialsPage() {
       setPage(pagination.totalPages);
     }
   }, [page, pagination.totalPages]);
+
+  function handleViewTestimonial(item) {
+    setViewTestimonial(item);
+    if (!item.isViewed) {
+      markTestimonialViewed.mutate(item._id);
+    }
+  }
+
+  function handleToggleWebsite(item, showOnWebsite) {
+    setTogglingId(item._id);
+    updateTestimonial.mutate(
+      { id: item._id, updates: { showOnWebsite } },
+      {
+        onSuccess: () => {
+          toast.success(
+            showOnWebsite
+              ? `${item.name || 'Testimonial'} is now visible on the website`
+              : `${item.name || 'Testimonial'} is now hidden from the website`
+          );
+        },
+        onError: (err) => {
+          toast.error(err.message || 'Could not update website visibility');
+        },
+        onSettled: () => setTogglingId(null),
+      }
+    );
+  }
 
   function handleConfirmDelete() {
     if (!pendingDelete) return;
@@ -90,7 +122,7 @@ export default function TestimonialsPage() {
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
           {isLoading ? (
             <SkeletonTable
-              minWidth="min-w-[900px]"
+              minWidth="min-w-[980px]"
               rows={8}
               showActions
               columns={[
@@ -98,6 +130,7 @@ export default function TestimonialsPage() {
                 { key: 'testimonial', label: 'Testimonial', lines: 3 },
                 { key: 'designation', label: 'Designation', width: 'w-36' },
                 { key: 'location', label: 'Location', width: 'w-32' },
+                { key: 'website', label: 'Website', width: 'w-28' },
                 { key: 'addedBy', label: 'Added by', width: 'w-32' },
                 { key: 'addedAt', label: 'Added at', width: 'w-36' },
               ]}
@@ -123,8 +156,11 @@ export default function TestimonialsPage() {
               <div className={isFetching ? 'opacity-70 transition-opacity' : ''}>
                 <TestimonialTable
                   testimonials={testimonials}
+                  onView={handleViewTestimonial}
                   onEdit={canEdit ? setEditTestimonial : undefined}
                   onDelete={canDelete ? setPendingDelete : undefined}
+                  onToggleWebsite={canEdit ? handleToggleWebsite : undefined}
+                  togglingId={togglingId}
                 />
               </div>
               <Pagination
@@ -147,6 +183,13 @@ export default function TestimonialsPage() {
           )}
         </div>
       </div>
+
+      <TestimonialViewModal
+        testimonial={viewTestimonial}
+        onClose={() => setViewTestimonial(null)}
+        onEdit={canEdit ? setEditTestimonial : undefined}
+        onDelete={canDelete ? setPendingDelete : undefined}
+      />
 
       <Modal
         open={showAddModal}

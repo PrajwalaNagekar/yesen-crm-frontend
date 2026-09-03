@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { AlertCircle, Package, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AlertCircle, Package } from 'lucide-react';
 import AppLayout from '../components/layout/AppLayout.jsx';
 import Modal from '../components/common/Modal.jsx';
 import SkeletonCard from '../components/common/loaders/SkeletonCard.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
+import CatalogueListToolbar from '../components/common/CatalogueListToolbar.jsx';
 import ProductForm from '../components/products/ProductForm.jsx';
 import ProductCard from '../components/products/ProductCard.jsx';
+import ProductViewModal from '../components/products/ProductViewModal.jsx';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useToast } from '../context/ToastContext.jsx';
@@ -23,14 +25,27 @@ export default function ProductsPage() {
   const canEdit = canUpdateProduct(user);
   const canDelete = canDeleteProduct(user);
 
-  const { data, isLoading, isError, error, refetch } = useProducts();
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sort, setSort] = useState('newest');
+
+  const { data, isLoading, isError, error, refetch } = useProducts({
+    q: debouncedSearch || undefined,
+    sort,
+  });
   const deleteProduct = useDeleteProduct();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewProduct, setViewProduct] = useState(null);
   const [editProduct, setEditProduct] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const products = data?.products ?? [];
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   function handleConfirmDelete() {
     if (!pendingDelete) return;
@@ -57,27 +72,17 @@ export default function ProductsPage() {
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          {/* Header with Add Button */}
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-5 py-4 shadow-sm backdrop-blur-sm">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">All Products</h2>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Manage your marine technology products
-              </p>
-            </div>
-            {canAdd && (
-              <button
-                type="button"
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
-              >
-                <Plus size={18} />
-                Add Product
-              </button>
-            )}
-          </div>
+          <CatalogueListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search products by name, label, or description…"
+            sort={sort}
+            onSortChange={setSort}
+            onAdd={() => setShowAddModal(true)}
+            addLabel="Add Product"
+            canAdd={canAdd}
+          />
 
-          {/* Products List */}
           {isLoading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <SkeletonCard count={6} />
@@ -104,6 +109,7 @@ export default function ProductsPage() {
                 <ProductCard
                   key={product._id}
                   product={product}
+                  onView={setViewProduct}
                   onEdit={canEdit ? () => setEditProduct(product) : undefined}
                   onDelete={canDelete ? () => setPendingDelete(product) : undefined}
                 />
@@ -113,15 +119,25 @@ export default function ProductsPage() {
             <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 px-6 py-16">
               <EmptyState
                 icon={Package}
-                title="No products yet"
-                description="Add your first product using the Add Product button above."
+                title={debouncedSearch ? 'No products match your search' : 'No products yet'}
+                description={
+                  debouncedSearch
+                    ? 'Try adjusting your search or sort options.'
+                    : 'Add your first product using the Add Product button above.'
+                }
               />
             </div>
           )}
         </div>
       </div>
 
-      {/* Add Product Modal */}
+      <ProductViewModal
+        product={viewProduct}
+        onClose={() => setViewProduct(null)}
+        onEdit={canEdit ? setEditProduct : undefined}
+        onDelete={canDelete ? setPendingDelete : undefined}
+      />
+
       <Modal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -138,7 +154,6 @@ export default function ProductsPage() {
         />
       </Modal>
 
-      {/* Edit Product Modal */}
       <Modal
         key={editProduct?._id}
         open={Boolean(editProduct)}
@@ -157,7 +172,6 @@ export default function ProductsPage() {
         />
       </Modal>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={Boolean(pendingDelete)}
         title="Delete product?"

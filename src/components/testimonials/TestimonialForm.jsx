@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   testimonial: '',
   designation: '',
   location: '',
+  showOnWebsite: false,
 };
 
 export default function TestimonialForm({ testimonial, onClose, onSuccess }) {
@@ -25,6 +26,7 @@ export default function TestimonialForm({ testimonial, onClose, onSuccess }) {
           testimonial: testimonial.testimonial ?? '',
           designation: testimonial.designation ?? '',
           location: testimonial.location ?? '',
+          showOnWebsite: Boolean(testimonial.showOnWebsite),
         }
       : EMPTY_FORM
   );
@@ -83,6 +85,21 @@ export default function TestimonialForm({ testimonial, onClose, onSuccess }) {
           />
         </div>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+        <input
+          type="checkbox"
+          checked={form.showOnWebsite}
+          onChange={(e) => update('showOnWebsite', e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
+        />
+        <span>
+          <span className="block text-sm font-semibold text-slate-900">Show on website</span>
+          <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+            When enabled, this testimonial appears on the public YESEN website.
+          </span>
+        </span>
+      </label>
 
       <div className="flex gap-3 border-t border-slate-100 pt-4">
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>

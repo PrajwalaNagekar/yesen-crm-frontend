@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as solutionsApi from '../api/solutions.js';
 
-export function useSolutions() {
+export function useSolutions({ q, sort } = {}) {
   return useQuery({
-    queryKey: ['solutions'],
-    queryFn: () => solutionsApi.fetchSolutions(),
+    queryKey: ['solutions', { q, sort }],
+    queryFn: () => solutionsApi.fetchSolutions({ q, sort }),
   });
 }
 

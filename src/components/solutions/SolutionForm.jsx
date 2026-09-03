@@ -97,6 +97,15 @@ export default function SolutionForm({ solution, onClose, onSuccess }) {
     }));
   }
 
+  function updateBenefit(index, field, value) {
+    setForm((current) => ({
+      ...current,
+      benefits: current.benefits.map((benefit, i) =>
+        i === index ? { ...benefit, [field]: value } : benefit
+      ),
+    }));
+  }
+
   function addFeature() {
     if (!newFeature.trim()) return;
     setForm((current) => ({
@@ -144,7 +153,6 @@ export default function SolutionForm({ solution, onClose, onSuccess }) {
 
     mutation.mutate(payload, {
       onSuccess: () => {
-        toast.success(isEdit ? 'Solution updated' : 'Solution created');
         onSuccess?.();
         onClose?.();
       },
@@ -194,14 +202,27 @@ export default function SolutionForm({ solution, onClose, onSuccess }) {
               key={index}
               className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
             >
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-slate-900">{benefit.point}</p>
-                <p className="text-sm text-slate-700">{benefit.explanation}</p>
+              <div className="flex flex-1 flex-col gap-2">
+                <input
+                  type="text"
+                  value={benefit.point}
+                  onChange={(e) => updateBenefit(index, 'point', e.target.value)}
+                  placeholder="Benefit point"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={benefit.explanation}
+                  onChange={(e) => updateBenefit(index, 'explanation', e.target.value)}
+                  placeholder="Benefit explanation"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
               </div>
               <button
                 type="button"
                 onClick={() => removeBenefit(index)}
                 className="mt-1 text-slate-400 transition-colors hover:text-red-600"
+                aria-label="Remove benefit"
               >
                 <Trash2 size={16} />
               </button>
@@ -326,7 +347,9 @@ export default function SolutionForm({ solution, onClose, onSuccess }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">Solution Image</p>
+        <p className="mb-2 text-sm font-semibold tracking-tight text-brand-900">
+          Solution Image <span className="ml-0.5 text-red-500">*</span>
+        </p>
         {imagePreview ? (
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 shadow-sm">
             <div className="relative aspect-[16/10] w-full bg-slate-100">

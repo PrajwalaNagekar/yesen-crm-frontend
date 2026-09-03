@@ -1,6 +1,6 @@
 export const PROJECT_STATUSES = [
   { value: 'live', label: 'Live' },
-  { value: 'ongoing', label: 'On going' },
+  { value: 'inprogress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
 ];
 
@@ -19,12 +19,12 @@ export const PROJECT_FILTER_LABELS = Object.fromEntries(
 
 export const PROJECT_STATUS_STYLES = {
   live: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-  ongoing: 'bg-blue-50 text-[#1d4ed8] ring-blue-100',
+  inprogress: 'bg-blue-50 text-[#1d4ed8] ring-blue-100',
   completed: 'bg-slate-100 text-slate-600 ring-slate-200',
 };
 
 export function getProjectStatusLabel(status) {
-  return PROJECT_STATUS_LABELS[status] || PROJECT_STATUS_LABELS.ongoing;
+  return PROJECT_STATUS_LABELS[status] || PROJECT_STATUS_LABELS.inprogress;
 }
 
 export function getProjectFilterLabel(filter) {
@@ -32,5 +32,5 @@ export function getProjectFilterLabel(filter) {
 }
 
 export function getProjectStatusStyle(status) {
-  return PROJECT_STATUS_STYLES[status] || PROJECT_STATUS_STYLES.ongoing;
+  return PROJECT_STATUS_STYLES[status] || PROJECT_STATUS_STYLES.inprogress;
 }

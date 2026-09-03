@@ -1,10 +1,13 @@
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Eye, Trash2 } from 'lucide-react';
 
-export default function ProductCard({ product, onEdit, onDelete }) {
+export default function ProductCard({ product, onView, onEdit, onDelete }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* Product Image */}
-      <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+      <div 
+        className="aspect-[4/3] w-full overflow-hidden bg-slate-100 cursor-pointer"
+        onClick={() => onView?.(product)}
+      >
         {product.image?.url ? (
           <img
             src={product.image.url}
@@ -32,20 +35,15 @@ export default function ProductCard({ product, onEdit, onDelete }) {
 
       {/* Product Info */}
       <div className="p-5">
-        {/* Serial No & Label */}
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-            #{product.serialNo}
-          </span>
-          {product.label && (
-            <span className="truncate text-xs font-medium text-slate-500">
-              {product.label}
-            </span>
-          )}
-        </div>
+    
 
         {/* Product Name */}
-        <h3 className="text-lg font-bold text-slate-900">{product.name}</h3>
+        <h3 
+          className="text-lg font-bold text-slate-900 cursor-pointer hover:text-[#2563EB] transition-colors"
+          onClick={() => onView?.(product)}
+        >
+          {product.name}
+        </h3>
 
         {/* Description 1 */}
         {product.description1 && (
@@ -65,12 +63,22 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         )}
 
         {/* Action Buttons */}
-        {(onEdit || onDelete) && (
+        {(onView || onEdit || onDelete) && (
           <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+            {onView && (
+              <button
+                type="button"
+                onClick={() => onView(product)}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <Eye size={14} />
+                View
+              </button>
+            )}
             {onEdit && (
               <button
                 type="button"
-                onClick={onEdit}
+                onClick={() => onEdit(product)}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 <Edit2 size={14} />
@@ -80,7 +88,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
             {onDelete && (
               <button
                 type="button"
-                onClick={onDelete}
+                onClick={() => onDelete(product)}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
               >
                 <Trash2 size={14} />
