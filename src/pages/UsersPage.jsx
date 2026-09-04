@@ -13,8 +13,10 @@ import { PERMISSIONS, hasPermission } from '../utils/permissions.js';
 export default function UsersPage() {
   const { user } = useAuth();
   const canCreate = hasPermission(user, PERMISSIONS.USERS_CREATE);
+  const canUpdate = hasPermission(user, PERMISSIONS.USERS_UPDATE);
   const { data: users, isLoading, isError, error, refetch } = useUsers();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editUser, setEditUser] = useState(null);
 
   return (
     <AppLayout
@@ -61,7 +63,10 @@ export default function UsersPage() {
               </button>
             </div>
           ) : (
-            <UserList users={users} />
+            <UserList
+              users={users}
+              onEdit={canUpdate ? setEditUser : undefined}
+            />
           )}
         </div>
       </div>
@@ -74,6 +79,25 @@ export default function UsersPage() {
         size="lg"
       >
         <UserForm onClose={() => setShowAddModal(false)} onSuccess={() => setShowAddModal(false)} />
+      </Modal>
+
+      <Modal
+        key={editUser?._id}
+        open={Boolean(editUser)}
+        onClose={() => setEditUser(null)}
+        title="Edit user"
+        description={
+          editUser?.name
+            ? `Update details for ${editUser.name}`
+            : 'Update name, email, role, status, and permissions.'
+        }
+        size="lg"
+      >
+        <UserForm
+          user={editUser}
+          onClose={() => setEditUser(null)}
+          onSuccess={() => setEditUser(null)}
+        />
       </Modal>
     </AppLayout>
   );

@@ -4,7 +4,7 @@ import EmptyState from '../common/EmptyState.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import UserDetailModal from './UserDetailModal.jsx';
 import ActiveToggle from './ActiveToggle.jsx';
-import { Users as UsersIcon, Eye, Trash2 } from 'lucide-react';
+import { Users as UsersIcon, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useDeleteUser, useUpdateUser } from '../../hooks/useUsers.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -49,7 +49,7 @@ function StatusCell({ user, canUpdate, updateUser }) {
   );
 }
 
-function UserRowActions({ user, isSelf, onView, onDelete, canDelete }) {
+function UserRowActions({ user, isSelf, onView, onEdit, onDelete, canUpdate, canDelete }) {
   return (
     <div className="flex items-center justify-end gap-1.5">
       <button
@@ -61,6 +61,17 @@ function UserRowActions({ user, isSelf, onView, onDelete, canDelete }) {
       >
         <Eye size={16} />
       </button>
+      {canUpdate ? (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="rounded-xl border border-slate-200/80 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"
+          aria-label={`Edit ${user.name}`}
+          title="Edit user"
+        >
+          <Pencil size={16} />
+        </button>
+      ) : null}
       {canDelete && !isSelf ? (
         <button
           type="button"
@@ -76,7 +87,7 @@ function UserRowActions({ user, isSelf, onView, onDelete, canDelete }) {
   );
 }
 
-export default function UserList({ users }) {
+export default function UserList({ users, onEdit }) {
   const { user: currentUser } = useAuth();
   const toast = useToast();
   const updateUser = useUpdateUser();
@@ -150,8 +161,10 @@ export default function UserList({ users }) {
                       <UserRowActions
                         user={user}
                         isSelf={isSelf}
+                        canUpdate={canUpdate}
                         canDelete={canDelete}
                         onView={() => setViewUser(user)}
+                        onEdit={() => onEdit?.(user)}
                         onDelete={() => setPendingDelete(user)}
                       />
                     </div>
@@ -186,7 +199,7 @@ export default function UserList({ users }) {
                 <th className="w-28 px-3 py-3.5 font-semibold">Role</th>
                 <th className="w-36 px-3 py-3.5 font-semibold">Status</th>
                 <th className="w-40 px-3 py-3.5 font-semibold">Permissions</th>
-                <th className="w-28 px-5 py-3.5 text-right font-semibold">Actions</th>
+                <th className="w-36 px-5 py-3.5 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -239,8 +252,10 @@ export default function UserList({ users }) {
                       <UserRowActions
                         user={user}
                         isSelf={isSelf}
+                        canUpdate={canUpdate}
                         canDelete={canDelete}
                         onView={() => setViewUser(user)}
+                        onEdit={() => onEdit?.(user)}
                         onDelete={() => setPendingDelete(user)}
                       />
                     </td>

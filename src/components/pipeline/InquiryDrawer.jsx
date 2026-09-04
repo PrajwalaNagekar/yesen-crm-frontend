@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Globe,
   Plus,
+  Clock,
 } from 'lucide-react';
 import Avatar from '../common/Avatar.jsx';
 import Button from '../common/Button.jsx';
@@ -36,7 +37,14 @@ import {
   useDeleteInquiry,
 } from '../../hooks/useInquiries.js';
 import { downloadDocument } from '../../api/inquiries.js';
-import { formatCurrency, formatRelativeTime, SOURCE_LABELS, STAGE_META, getAssigneeName } from '../../utils/format.js';
+import {
+  formatCurrency,
+  formatDateTime,
+  formatRelativeTime,
+  SOURCE_LABELS,
+  STAGE_META,
+  getAssigneeName,
+} from '../../utils/format.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 function Section({ title, action, children }) {
@@ -172,6 +180,18 @@ function InquiryDrawerContent({
                 </h2>
                 {inquiry.company ? (
                   <p className="mt-0.5 truncate text-sm text-slate-500">{inquiry.company}</p>
+                ) : null}
+                {inquiry.createdAt ? (
+                  <p
+                    className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500"
+                    title={formatDateTime(inquiry.createdAt)}
+                  >
+                    <Clock size={12} className="shrink-0 text-slate-400" />
+                    <span>
+                      Received {formatDateTime(inquiry.createdAt)}
+                      <span className="text-slate-400"> · {formatRelativeTime(inquiry.createdAt)}</span>
+                    </span>
+                  </p>
                 ) : null}
               </div>
               <button
