@@ -68,7 +68,7 @@ export default function ProductsPage() {
     <AppLayout
       scrollable
       title="Products"
-      subtitle={`E-MARINE, B-KOOL, M-CONTROL, B-GUARD · ${products.length} product${products.length === 1 ? '' : 's'}`}
+      subtitle={`${products.length} product${products.length === 1 ? '' : 's'}`}
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">

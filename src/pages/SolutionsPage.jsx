@@ -68,7 +68,7 @@ export default function SolutionsPage() {
     <AppLayout
       scrollable
       title="Solutions"
-      subtitle={`Marine & shore solutions · ${solutions.length} solution${solutions.length === 1 ? '' : 's'}`}
+      subtitle={`${solutions.length} solution${solutions.length === 1 ? '' : 's'}`}
     >
       <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100/80">
         <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
